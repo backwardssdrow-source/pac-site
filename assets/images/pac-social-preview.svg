@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-label="Pragmatic Artistry Collective social preview">
+  <defs>
+    <radialGradient id="warm-plum" cx="34%" cy="24%" r="90%">
+      <stop offset="0%" stop-color="#65445d"/>
+      <stop offset="54%" stop-color="#2d2035"/>
+      <stop offset="100%" stop-color="#17121c"/>
+    </radialGradient>
+    <filter id="soft-glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <rect width="1200" height="630" fill="#17121c"/>
+  <rect width="1200" height="630" fill="url(#warm-plum)"/>
+  <circle cx="175" cy="118" r="300" fill="#8a687f" opacity="0.18"/>
+  <circle cx="1010" cy="474" r="260" fill="#c8a75a" opacity="0.09"/>
+  <path d="M92 442 L223 198 L385 352 L538 152 L748 322 L994 226" fill="none" stroke="#c8a75a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.34"/>
+  <path d="M92 442 L385 352 M223 198 L538 152 M748 322 L994 226" fill="none" stroke="#fffaf2" stroke-width="1.5" stroke-linecap="round" opacity="0.16"/>
+  <g filter="url(#soft-glow)">
+    <circle cx="92" cy="442" r="6" fill="#fffaf2"/>
+    <circle cx="223" cy="198" r="7" fill="#fffaf2"/>
+    <circle cx="385" cy="352" r="6" fill="#fffaf2"/>
+    <circle cx="538" cy="152" r="7" fill="#fffaf2"/>
+    <circle cx="748" cy="322" r="6" fill="#fffaf2"/>
+    <circle cx="994" cy="226" r="7" fill="#fffaf2"/>
+    <circle cx="1060" cy="424" r="3" fill="#c8a75a"/>
+    <circle cx="838" cy="122" r="3" fill="#c8a75a"/>
+    <circle cx="140" cy="104" r="3" fill="#c8a75a"/>
+    <circle cx="1116" cy="104" r="2.4" fill="#fffaf2" opacity="0.72"/>
+    <circle cx="674" cy="506" r="2.4" fill="#fffaf2" opacity="0.66"/>
+    <circle cx="302" cy="520" r="2.4" fill="#fffaf2" opacity="0.58"/>
+  </g>
+  <text x="94" y="126" fill="#c8a75a" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="22" font-weight="800" letter-spacing="7">A HUMAN LEGIBILITY INSTITUTE</text>
+  <text x="94" y="286" fill="#fffaf2" font-family="Georgia, Times New Roman, serif" font-size="78" font-weight="500">Pragmatic Artistry</text>
+  <text x="94" y="374" fill="#fffaf2" font-family="Georgia, Times New Roman, serif" font-size="78" font-weight="500">Collective</text>
+  <text x="98" y="456" fill="#fffaf2" opacity="0.82" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="30">Research, tools, and practices for making</text>
+  <text x="98" y="498" fill="#fffaf2" opacity="0.82" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="30">human experience more legible.</text>
+  <text x="98" y="560" fill="#c8a75a" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="22" font-weight="700" letter-spacing="2">PRAGMATICARTISTRY.COM</text>
+</svg>
