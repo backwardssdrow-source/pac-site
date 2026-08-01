@@ -16,44 +16,98 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Wait for complete site and validate content
+
+      - name: Wait for the live site and download its loader assets
         shell: bash
         run: |
-          URL='https://backwardssdrow-source.github.io/pac-site/in-good-company-preview/'
+          set -euo pipefail
+          BASE='https://backwardssdrow-source.github.io/pac-site/in-good-company-preview'
           STATUS='000'
-          for attempt in 1 2 3 4 5 6; do
-            STATUS=$(curl --silent --show-error --location --output page.html --write-out '%{http_code}' "$URL" || true)
-            echo "Attempt $attempt: $STATUS"
-            if [ "$STATUS" = '200' ] \
-               && grep -q 'Presence Scan' page.html \
-               && grep -q 'Presence Lab' page.html \
-               && grep -q 'Senior Presence Advisory' page.html \
-               && grep -q 'ERG Portfolio Diagnostic' page.html \
-               && grep -q 'ERG Operating Model Build' page.html \
-               && grep -q 'Fractional ERG Office' page.html; then
+          for attempt in 1 2 3 4 5 6 7 8 9 10; do
+            STATUS=$(curl --silent --show-error --location --output live-index.html --write-out '%{http_code}' "$BASE/" || true)
+            echo "Index attempt $attempt: $STATUS"
+            if [ "$STATUS" = '200' ] && grep -q 'site-payload-06.js' live-index.html; then
               break
             fi
             sleep 10
           done
-          CONTENT='FAILED'
-          if [ "$STATUS" = '200' ] \
-             && grep -q 'Presence Scan' page.html \
-             && grep -q 'Presence Lab' page.html \
-             && grep -q 'Senior Presence Advisory' page.html \
-             && grep -q 'ERG Portfolio Diagnostic' page.html \
-             && grep -q 'ERG Operating Model Build' page.html \
-             && grep -q 'Fractional ERG Office' page.html; then
-            CONTENT='VERIFIED'
-          fi
+          for part in 01 02 03 04 05 06; do
+            ASSET_STATUS=$(curl --silent --show-error --location --output "payload-$part.js" --write-out '%{http_code}' "$BASE/assets/site-payload-$part.js" || true)
+            echo "Asset $part: $ASSET_STATUS"
+            test "$ASSET_STATUS" = '200'
+          done
+          echo "$STATUS" > live-status.txt
+
+      - name: Reconstruct and validate the live August site
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs = require('fs');
+          const zlib = require('zlib');
+          let encoded = '';
+          for (const part of ['01','02','03','04','05','06']) {
+            const js = fs.readFileSync(`payload-${part}.js`, 'utf8');
+            const match = js.match(/\+"([A-Za-z0-9+/=]+)";/);
+            if (!match) throw new Error(`Unable to extract payload ${part}`);
+            encoded += match[1];
+          }
+          if (encoded.length !== 31000) throw new Error(`Unexpected payload length: ${encoded.length}`);
+          const html = zlib.gunzipSync(Buffer.from(encoded, 'base64')).toString('utf8');
+          const required = [
+            'From $15,000',
+            'From $30,000',
+            'From $12,000/month',
+            'From $9,500',
+            'From $20,000',
+            'From $4,000/month',
+            '3-month initial term',
+            'Limited August founding engagements.',
+            'Embedded Senior Presence Advisory',
+            'ERG Portfolio Diagnostic',
+            'ERG Operating Model Build',
+            'Fractional ERG Office',
+            'Presence Scan',
+            'Presence Lab',
+            'Senior Presence Advisory'
+          ];
+          const stale = [
+            'From $18,000',
+            'From $36,000',
+            'From $15,000/month',
+            'From $12,500',
+            'From $26,000',
+            'From $6,500/month',
+            '6-month minimum',
+            'six-month minimum',
+            'Month 6'
+          ];
+          const missing = required.filter(value => !html.includes(value));
+          const remaining = stale.filter(value => html.includes(value));
+          if (missing.length) throw new Error(`Missing required content: ${missing.join(', ')}`);
+          if (remaining.length) throw new Error(`Stale content remains: ${remaining.join(', ')}`);
+          fs.writeFileSync('live-expanded-site.html', html);
+          fs.writeFileSync('live-verification.json', JSON.stringify({
+            verified: true,
+            encodedBytes: encoded.length,
+            expandedBytes: Buffer.byteLength(html),
+            requiredCount: required.length,
+            serviceRoutes: (html.match(/id="service-/g) || []).length
+          }, null, 2));
+          NODE
+
+      - name: Record successful verification
+        shell: bash
+        run: |
           {
-            echo "$CONTENT complete partner-review website"
-            echo "HTTP status: $STATUS"
+            echo 'VERIFIED live August pricing and service site'
+            echo "HTTP status: $(cat live-status.txt)"
             echo "Checked at: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
-            echo "URL: $URL"
-            echo "Downloaded bytes: $(wc -c < page.html 2>/dev/null || echo missing)"
+            echo 'URL: https://backwardssdrow-source.github.io/pac-site/in-good-company-preview/'
+            cat live-verification.json
           } > pages-check.txt
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add pages-check.txt
-          git commit -m 'Verify complete In Good Company GitHub Pages site'
+          git commit -m 'Verify updated In Good Company August site'
           git push
