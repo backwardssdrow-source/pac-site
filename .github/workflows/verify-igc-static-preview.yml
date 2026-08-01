@@ -13,39 +13,55 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     steps:
-      - name: Fetch and validate public preview
-        shell: bash
-        run: |
-          set -euo pipefail
-          URL='https://cdn.statically.io/gh/backwardssdrow-source/pac-site@b0dad08524c217645fa7a5b74f67c12916998150/in-good-company-preview/index.html'
-          curl --fail --show-error --silent --location --dump-header headers.txt --output preview.html "$URL"
-          echo '--- response headers ---'
-          cat headers.txt
-          echo '--- file size ---'
-          wc -c preview.html
-          grep -qi 'content-type: text/html' headers.txt
-          for required in \
-            'In Good Company' \
-            'Presence Scan' \
-            'Presence Lab' \
-            'Senior Presence Advisory' \
-            'ERG Portfolio Diagnostic' \
-            'ERG Operating Model Build' \
-            'Fractional ERG Office'; do
-            grep -q "$required" preview.html
-          done
+      - name: Check out repository
+        uses: actions/checkout@v4
 
-      - name: Record successful verification
+      - name: Fetch public preview
+        id: fetch
+        continue-on-error: true
         shell: bash
         run: |
+          URL='https://cdn.statically.io/gh/backwardssdrow-source/pac-site@b0dad08524c217645fa7a5b74f67c12916998150/in-good-company-preview/index.html'
+          set +e
+          curl --show-error --silent --location --dump-header headers.txt --output preview.html --write-out '%{http_code}' "$URL" > status.txt
+          CURL_EXIT=$?
+          set -e
+          echo "$CURL_EXIT" > curl-exit.txt
+          echo '--- response headers ---'
+          cat headers.txt 2>/dev/null || true
+          echo '--- status ---'
+          cat status.txt 2>/dev/null || true
+          echo '--- file size ---'
+          wc -c preview.html 2>/dev/null || true
+
+      - name: Record verification result
+        if: always()
+        shell: bash
+        run: |
+          RESULT='FAILED'
+          if [ "$(cat curl-exit.txt 2>/dev/null || echo 1)" = '0' ] \
+             && [ "$(cat status.txt 2>/dev/null || echo 000)" = '200' ] \
+             && grep -qi 'content-type: text/html' headers.txt 2>/dev/null \
+             && grep -q 'In Good Company' preview.html 2>/dev/null \
+             && grep -q 'Presence Scan' preview.html 2>/dev/null \
+             && grep -q 'Presence Lab' preview.html 2>/dev/null \
+             && grep -q 'Senior Presence Advisory' preview.html 2>/dev/null \
+             && grep -q 'ERG Portfolio Diagnostic' preview.html 2>/dev/null \
+             && grep -q 'ERG Operating Model Build' preview.html 2>/dev/null \
+             && grep -q 'Fractional ERG Office' preview.html 2>/dev/null; then
+            RESULT='VERIFIED'
+          fi
           {
-            echo 'Verified public preview'
+            echo "$RESULT public preview"
             echo 'URL: https://cdn.statically.io/gh/backwardssdrow-source/pac-site@b0dad08524c217645fa7a5b74f67c12916998150/in-good-company-preview/index.html'
-            echo "Verified at: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
-            grep -iE '^(HTTP/|content-type:|content-length:)' headers.txt || true
+            echo "Checked at: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+            echo "curl exit: $(cat curl-exit.txt 2>/dev/null || echo missing)"
+            echo "HTTP status: $(cat status.txt 2>/dev/null || echo missing)"
+            echo "Downloaded bytes: $(wc -c < preview.html 2>/dev/null || echo missing)"
+            grep -iE '^(HTTP/|content-type:|content-length:|location:)' headers.txt 2>/dev/null || true
           } > in-good-company-preview/verification.txt
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add in-good-company-preview/verification.txt
-          git commit -m 'Verify public In Good Company preview'
+          git commit -m 'Record public In Good Company preview check'
           git push
