@@ -1,0 +1,51 @@
+name: Verify In Good Company static preview
+
+on:
+  push:
+    paths:
+      - '.github/workflows/verify-igc-static-preview.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch public preview
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL='https://cdn.statically.io/gh/backwardssdrow-source/pac-site@c7182496b44b7586f13adb118887418e69b4f76f/temporary/igc-august-2026-partner-review.html'
+          curl --fail --show-error --silent --location --dump-header headers.txt --output preview.html "$URL"
+          echo '--- response headers ---'
+          cat headers.txt
+          echo '--- file size ---'
+          wc -c preview.html
+          grep -qi 'content-type: text/html' headers.txt
+          grep -q 'DecompressionStream' preview.html
+
+      - name: Validate embedded website payload
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const zlib = require('zlib');
+          const wrapper = fs.readFileSync('preview.html', 'utf8');
+          const match = wrapper.match(/let b="([A-Za-z0-9+/=]+)"/);
+          if (!match) throw new Error('Embedded site payload was not found');
+          const html = zlib.gunzipSync(Buffer.from(match[1], 'base64')).toString('utf8');
+          for (const required of [
+            'In Good Company',
+            'Presence Scan',
+            'Presence Lab',
+            'Senior Presence Advisory',
+            'ERG Portfolio Diagnostic',
+            'ERG Operating Model Build',
+            'Fractional ERG Office'
+          ]) {
+            if (!html.includes(required)) throw new Error(`Missing required content: ${required}`);
+          }
+          console.log(`Validated embedded website: ${Buffer.byteLength(html)} bytes`);
+          NODE
