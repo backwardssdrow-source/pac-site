@@ -1,11 +1,11 @@
 VERIFIED live August pricing and service site
 HTTP status: 200
-Checked at: 2026-08-01T17:31:46Z
+Checked at: 2026-08-01T17:33:02Z
 URL: https://backwardssdrow-source.github.io/pac-site/in-good-company-preview/
 {
   "verified": true,
   "encodedBytes": 31000,
   "expandedBytes": 100874,
   "requiredCount": 15,
-  "serviceRoutes": 0
+  "serviceRoutes": 6
 }
