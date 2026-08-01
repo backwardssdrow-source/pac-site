@@ -1,0 +1,194 @@
+name: Update In Good Company August pricing from main
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/update-igc-august-pricing-main.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-site:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out GitHub Pages branch
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          fetch-depth: 0
+
+      - name: Apply August launch pricing and scope updates
+        shell: bash
+        run: |
+          python <<'PY'
+          from pathlib import Path
+
+          path = Path('in-good-company-preview/index.html')
+          text = path.read_text(encoding='utf-8')
+
+          replacements = [
+              ('$18,000–$28,000', '$15,000–$24,000'),
+              ('$18,000-$28,000', '$15,000-$24,000'),
+              ('From $18,000', 'From $15,000'),
+              ('$36,000–$60,000', '$30,000–$50,000'),
+              ('$36,000-$60,000', '$30,000-$50,000'),
+              ('From $36,000', 'From $30,000'),
+              ('$15,000–$25,000/month', '$12,000–$18,000/month'),
+              ('$15,000-$25,000/month', '$12,000-$18,000/month'),
+              ('From $15,000/month', 'From $12,000/month'),
+              ('6-month minimum', '3-month initial term'),
+              ('six-month minimum', 'three-month initial term'),
+              ('$12,500–$18,000', '$9,500–$14,000'),
+              ('$12,500-$18,000', '$9,500-$14,000'),
+              ('From $12,500', 'From $9,500'),
+              ('$26,000–$45,000', '$20,000–$35,000'),
+              ('$26,000-$45,000', '$20,000-$35,000'),
+              ('From $26,000', 'From $20,000'),
+              ('$6,500–$10,000/month', '$4,000–$6,500/month'),
+              ('$6,500-$10,000/month', '$4,000-$6,500/month'),
+              ('From $6,500/month', 'From $4,000/month'),
+              ('Remote-first enterprise advisory · Core engagements from $12,500',
+               'August founding engagement pricing · Core engagements from $9,500'),
+              ('Remote-first enterprise advisory • Core engagements from $12,500',
+               'August founding engagement pricing • Core engagements from $9,500'),
+              ('Partner review · August 2026 launch draft · Inquiry form remains in preview mode.',
+               'Partner review · August founding prices updated · Inquiry form remains in preview mode.'),
+          ]
+          for old, new in replacements:
+              text = text.replace(old, new)
+
+          def bounded_segment(source, starts, ends):
+              start = next((source.find(token) for token in starts if source.find(token) >= 0), -1)
+              if start < 0:
+                  return None
+              candidates = [source.find(token, start + 1) for token in ends]
+              candidates = [i for i in candidates if i >= 0]
+              end = min(candidates) if candidates else len(source)
+              return start, end, source[start:end]
+
+          result = bounded_segment(
+              text,
+              ['id="service-fractional-erg-office"', 'data-route="service/fractional-erg-office"'],
+              ['id="service-presence-scan"', 'data-route="service/presence-scan"'],
+          )
+          if result:
+              start, end, segment = result
+              segment = segment.replace('Months 2–3', 'Month 2').replace('Months 2-3', 'Month 2')
+              segment = segment.replace('Months 4–5', 'Month 3').replace('Months 4-5', 'Month 3')
+              segment = segment.replace('<b>Strengthen</b>', '<b>__IGC_ROW3__</b>', 1)
+              segment = segment.replace('<b>Decide</b>', '<b>Strengthen</b>', 1)
+              segment = segment.replace('<b>__IGC_ROW3__</b>', '<b>Decide</b>', 1)
+              segment = segment.replace('<strong>Strengthen</strong>', '<strong>__IGC_ROW3__</strong>', 1)
+              segment = segment.replace('<strong>Decide</strong>', '<strong>Strengthen</strong>', 1)
+              segment = segment.replace('<strong>__IGC_ROW3__</strong>', '<strong>Decide</strong>', 1)
+              segment = segment.replace(
+                  'Standardize tools, reduce recurring friction, improve executive reporting, and transfer repeatable practices to internal owners.',
+                  'Assess progress, transfer the highest-value practices to internal owners, and prepare a clear renewal or transition recommendation.'
+              )
+              segment = segment.replace('Month 6', 'If renewed')
+              segment = segment.replace(
+                  'Assess progress, remaining dependency, internal capacity, and whether the right next step is renewal, transition, or a narrower advisory relationship.',
+                  'Continue implementation, deepen sponsor and ERG-leader support, and strengthen the operating model against a renewed scope.'
+              )
+              segment = segment.replace(
+                  'Quarterly executive brief covering progress, decisions, unresolved issues, and next-quarter priorities.',
+                  'End-of-term executive brief covering progress, decisions, unresolved issues, and renewal or transition priorities.'
+              )
+              segment = segment.replace('Quarterly Executive Brief', 'End-of-Term Executive Brief')
+              segment = segment.replace(
+                  'Participate in quarterly executive reviews and act on material decisions.',
+                  'Participate in the end-of-term executive review and act on material decisions.'
+              )
+              segment = segment.replace(
+                  'The sixth-month review examines progress, internal capacity, ongoing dependency, and the economics of renewal versus transition.',
+                  'The end-of-term review examines progress, internal capacity, ongoing dependency, and the economics of renewal versus transition.'
+              )
+              text = text[:start] + segment + text[end:]
+
+          result = bounded_segment(
+              text,
+              ['id="service-senior-presence-advisory"', 'data-route="service/senior-presence-advisory"'],
+              ['</main>'],
+          )
+          if result:
+              start, end, segment = result
+              segment = segment.replace(
+                  'Preparation for high-stakes conversations, decisions, sponsor moments, and leadership transitions.',
+                  'One 30-minute high-stakes preparation session each month for an urgent conversation, decision, sponsor moment, or leadership transition.'
+              )
+              segment = segment.replace(
+                  'Starting scope includes two sessions and up to four bounded asynchronous reviews per month.',
+                  'Starting scope includes two 60-minute advisory sessions, one 30-minute high-stakes preparation session, and up to four bounded asynchronous reviews per month.'
+              )
+              embedded = (
+                  '<li><strong>Embedded Senior Presence Advisory — from $6,500/month.</strong> '
+                  'Adds selected meeting observation, expanded asynchronous access, stakeholder strategy, '
+                  'and chief-of-staff or sponsor coordination.</li>'
+              )
+              if 'Embedded Senior Presence Advisory' not in segment:
+                  segment = segment.replace(
+                      '<li>Presence Scan at the beginning of the engagement</li>',
+                      embedded + '<li>Presence Scan at the beginning of the engagement</li>',
+                      1,
+                  )
+              text = text[:start] + segment + text[end:]
+
+          if 'Limited August founding engagements.' not in text:
+              founding_band = '''<section class="section dark" id="founding-pricing"><div class="wrap"><p class="eyebrow">August pricing</p><h2>Limited August founding engagements. Full-scope work.</h2><p class="lead">The August prices preserve the complete engagement while a small number of early clients help refine delivery through structured feedback. Any testimonial, reference, or anonymized case study requires client satisfaction and advance agreement. After three strong engagements, pricing will be reviewed against actual effort, outcomes, margin, demand, and buyer response.</p></div></section>'''
+              marker = '<section class="section dark" id="approach">'
+              if marker in text:
+                  text = text.replace(marker, founding_band + marker, 1)
+              else:
+                  marker = '<section id="approach">'
+                  text = text.replace(marker, founding_band + marker, 1)
+
+          required = [
+              'From $15,000', 'From $30,000', 'From $12,000/month',
+              'From $9,500', 'From $20,000', 'From $4,000/month',
+              '3-month initial term', 'Limited August founding engagements.',
+              'Embedded Senior Presence Advisory',
+          ]
+          for value in required:
+              if value not in text:
+                  raise SystemExit(f'Missing required update: {value}')
+
+          stale = [
+              'From $18,000', 'From $36,000', 'From $15,000/month',
+              'From $12,500', 'From $26,000', 'From $6,500/month',
+              '6-month minimum', 'six-month minimum', 'sixth-month',
+              'Months 4-5', 'Months 4–5', 'Month 6',
+          ]
+          for value in stale:
+              if value in text:
+                  raise SystemExit(f'Stale public pricing or term remains: {value}')
+
+          path.write_text(text, encoding='utf-8')
+          Path('in-good-company-preview/pricing-verification.txt').write_text(
+              'VERIFIED August 2026 pricing update\n'
+              'ERG Portfolio Diagnostic: From $15,000\n'
+              'ERG Operating Model Build: From $30,000\n'
+              'Fractional ERG Office: From $12,000/month; 3-month initial term\n'
+              'Presence Scan: From $9,500\n'
+              'Presence Lab: From $20,000\n'
+              'Senior Presence Advisory: From $4,000/month\n'
+              'Embedded Senior Presence Advisory: From $6,500/month\n',
+              encoding='utf-8',
+          )
+          PY
+
+      - name: Commit updated GitHub Pages site
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add in-good-company-preview/index.html in-good-company-preview/pricing-verification.txt
+          if git diff --cached --quiet; then
+            echo 'No site changes to commit.'
+          else
+            git commit -m 'Update In Good Company August launch pricing'
+            git push origin HEAD:gh-pages
+          fi
