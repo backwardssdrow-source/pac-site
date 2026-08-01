@@ -1,5 +1,11 @@
-VERIFIED complete partner-review website
+VERIFIED live August pricing and service site
 HTTP status: 200
-Checked at: 2026-08-01T15:57:45Z
+Checked at: 2026-08-01T17:31:46Z
 URL: https://backwardssdrow-source.github.io/pac-site/in-good-company-preview/
-Downloaded bytes: 48630
+{
+  "verified": true,
+  "encodedBytes": 31000,
+  "expandedBytes": 100874,
+  "requiredCount": 15,
+  "serviceRoutes": 0
+}
