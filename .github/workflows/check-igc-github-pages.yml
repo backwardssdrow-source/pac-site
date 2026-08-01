@@ -86,13 +86,15 @@ jobs:
           const remaining = stale.filter(value => html.includes(value));
           if (missing.length) throw new Error(`Missing required content: ${missing.join(', ')}`);
           if (remaining.length) throw new Error(`Stale content remains: ${remaining.join(', ')}`);
+          const serviceRoutes = (html.match(/data-route="service\//g) || []).length;
+          if (serviceRoutes !== 6) throw new Error(`Expected 6 service routes; found ${serviceRoutes}`);
           fs.writeFileSync('live-expanded-site.html', html);
           fs.writeFileSync('live-verification.json', JSON.stringify({
             verified: true,
             encodedBytes: encoded.length,
             expandedBytes: Buffer.byteLength(html),
             requiredCount: required.length,
-            serviceRoutes: (html.match(/id="service-/g) || []).length
+            serviceRoutes
           }, null, 2));
           NODE
 
