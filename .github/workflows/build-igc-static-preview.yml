@@ -1,0 +1,59 @@
+name: Build In Good Company static preview
+
+on:
+  push:
+    paths:
+      - '.github/workflows/build-igc-static-preview.yml'
+      - 'temporary/igc-august-2026-partner-review.html'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Expand self-contained website
+        shell: bash
+        run: |
+          mkdir -p in-good-company-preview
+          node <<'NODE'
+          const fs = require('fs');
+          const zlib = require('zlib');
+          const source = fs.readFileSync('temporary/igc-august-2026-partner-review.html', 'utf8');
+          const match = source.match(/let b="([A-Za-z0-9+/=]+)"/);
+          if (!match) throw new Error('Embedded website payload was not found');
+          const html = zlib.gunzipSync(Buffer.from(match[1], 'base64')).toString('utf8');
+          const required = [
+            'In Good Company',
+            'Presence Scan',
+            'Presence Lab',
+            'Senior Presence Advisory',
+            'ERG Portfolio Diagnostic',
+            'ERG Operating Model Build',
+            'Fractional ERG Office'
+          ];
+          for (const text of required) {
+            if (!html.includes(text)) throw new Error(`Missing required content: ${text}`);
+          }
+          fs.writeFileSync('in-good-company-preview/index.html', html);
+          fs.writeFileSync('in-good-company-preview/.nojekyll', '');
+          console.log(`Generated ${Buffer.byteLength(html)} bytes of normal HTML`);
+          NODE
+
+      - name: Commit generated preview
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add in-good-company-preview/index.html in-good-company-preview/.nojekyll
+          if git diff --cached --quiet; then
+            echo 'No generated changes to commit.'
+          else
+            git commit -m 'Generate uncompressed In Good Company partner preview'
+            git push
+          fi
