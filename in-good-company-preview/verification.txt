@@ -1,0 +1,8 @@
+FAILED public preview
+URL: https://cdn.statically.io/gh/backwardssdrow-source/pac-site@b0dad08524c217645fa7a5b74f67c12916998150/in-good-company-preview/index.html
+Checked at: 2026-08-01T15:53:47Z
+curl exit: 0
+HTTP status: 200
+Downloaded bytes: 48630
+HTTP/2 200 
+content-type: text/plain; charset=utf-8
