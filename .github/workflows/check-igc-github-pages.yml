@@ -1,0 +1,44 @@
+name: Check In Good Company GitHub Pages preview
+
+on:
+  push:
+    branches:
+      - gh-pages
+    paths:
+      - '.github/workflows/check-igc-github-pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Wait for Pages and check URL
+        shell: bash
+        run: |
+          URL='https://backwardssdrow-source.github.io/pac-site/'
+          STATUS='000'
+          for attempt in 1 2 3 4 5 6; do
+            STATUS=$(curl --silent --show-error --location --output page.html --write-out '%{http_code}' "$URL" || true)
+            echo "Attempt $attempt: $STATUS"
+            if [ "$STATUS" = '200' ]; then break; fi
+            sleep 10
+          done
+          {
+            echo "HTTP status: $STATUS"
+            echo "Checked at: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+            echo "URL: $URL"
+            if [ -f page.html ]; then
+              echo "Downloaded bytes: $(wc -c < page.html)"
+              head -c 200 page.html | tr '\n' ' '
+              echo
+            fi
+          } > pages-check.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add pages-check.txt
+          git commit -m 'Record GitHub Pages availability check'
+          git push
