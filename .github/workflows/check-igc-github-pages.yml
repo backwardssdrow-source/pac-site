@@ -1,10 +1,11 @@
-name: Check Make Good pricing preview
+name: Check MakeGood pricing and legacy redirect
 
 on:
   push:
     branches: [gh-pages]
     paths:
-      - 'in-good-company-preview/**'
+      - 'makegood/**'
+      - 'in-good-company-preview/index.html'
       - '.github/workflows/check-igc-github-pages.yml'
   workflow_dispatch:
 
@@ -14,16 +15,18 @@ permissions:
 jobs:
   check:
     runs-on: ubuntu-latest
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
-      - name: Verify the current service page
+      - name: Verify the current service page and redirect
         shell: bash
         run: |
           set -euo pipefail
           node <<'NODE'
           const fs = require('fs');
-          const html = fs.readFileSync('in-good-company-preview/index.html', 'utf8');
-          const required = ['Make Good | Services and Founding Pricing','Coaching &amp; Thought Partnership','$1,250','$2,500','$9,000','$18,000','$7,500','$5,000','$10,000','$2,000','$3,500/month','$22,500 minimum','$6,000 initial total','$10,500 total','Fee confirmed before booking','No positive review is required.'];
+          const html = fs.readFileSync('makegood/index.html', 'utf8');
+          const redirect = fs.readFileSync('in-good-company-preview/index.html', 'utf8');
+          const required = ['MakeGood Co.','Coaching &amp; Thought Partnership','$1,250','$2,500','$9,000','$18,000','$7,500','$5,000','$10,000','$2,000','$3,500/month','$22,500 minimum','$6,000 initial total','$10,500 total','Fee confirmed before booking','No positive review is required.'];
           for (const value of required) if (!html.includes(value)) throw new Error('Missing: ' + value);
           for (const value of ['August 2026','Limited August','From $15,000','From $30,000','From $12,000/month','From $9,500','From $20,000','From $4,000/month','6-month minimum','hello@in-good-company.example','site-payload-06.js']) {
             if (html.includes(value)) throw new Error('Obsolete content: ' + value);
@@ -33,21 +36,23 @@ jobs:
           for (const id of ['service-coaching','service-decision-session','service-practice-lab','service-erg-portfolio-diagnostic','service-erg-operating-model-build','service-fractional-erg-office','service-presence-scan','service-presence-lab','service-senior-presence-advisory']) {
             if (!html.includes('id="' + id + '"')) throw new Error('Missing service anchor: ' + id);
           }
-          console.log('Source pricing, scope markers and routes verified.');
+          if (!redirect.includes("location.replace('../makegood/'+location.search+location.hash)")) throw new Error('Legacy redirect must preserve query and hash.');
+          if (!redirect.includes('href="../makegood/"')) throw new Error('Missing no-JavaScript fallback link.');
+          console.log('Founding pricing, service scope markers, routes and legacy redirect verified.');
           NODE
-      - name: Verify the hosted preview has the same content
+      - name: Verify the hosted MakeGood page
         shell: bash
         run: |
           set -euo pipefail
-          URL='https://backwardssdrow-source.github.io/pac-site/in-good-company-preview/'
+          URL='https://backwardssdrow-source.github.io/pac-site/makegood/'
           for attempt in $(seq 1 18); do
-            STATUS=$(curl --max-time 20 --silent --show-error --location --output /tmp/make-good-live.html --write-out '%{http_code}' "${URL}?revision=${GITHUB_SHA}" || true)
-            if [ "$STATUS" = '200' ] && cmp -s in-good-company-preview/index.html /tmp/make-good-live.html; then
-              echo "Verified current Make Good page: $URL" | tee -a "$GITHUB_STEP_SUMMARY"
+            STATUS=$(curl --max-time 20 --silent --show-error --location --output /tmp/makegood-live.html --write-out '%{http_code}' "${URL}?revision=${GITHUB_SHA}" || true)
+            if [ "$STATUS" = '200' ] && cmp -s makegood/index.html /tmp/makegood-live.html; then
+              echo "Verified current MakeGood page: $URL" | tee -a "$GITHUB_STEP_SUMMARY"
               exit 0
             fi
             echo "Attempt $attempt: hosted page not yet identical (HTTP $STATUS)."
             sleep 10
           done
-          echo 'Source is updated, but the hosted page could not be verified at the same version.' >&2
+          echo 'The hosted page could not be verified at the same version.' >&2
           exit 1
