@@ -1,0 +1,13 @@
+/* Sunrise brand-guide refinements; retain the supplied logo artwork. */
+html{scroll-padding-top:195px}
+.nav .wrap{height:auto;min-height:170px;padding-block:8px}
+.brand img{width:190px;height:auto;max-width:none}
+.footer-brand img{width:190px;height:auto;max-width:none}
+.hero-mark{transform:none}
+.eyebrow .number{color:var(--ink)}
+.session-card>p,.section-head>p,.studio-row>p,.about-copy>p,.faq-list details p,.approach-item p{font-size:16px;line-height:1.6}
+.session-card{min-height:390px}
+.row-footer>span,.duration,.pricing-note,.contact-note,.form-note,.form-foot{font-size:12px;line-height:1.6}
+.modal-body p,.modal-body li{font-size:16px;line-height:1.6}
+@media(max-width:900px){.navlinks.open{top:100%}.brandtext{display:none}.nav .wrap{min-height:166px}.brand img{width:190px}.studio-row>p{max-width:100%}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{transition:none!important;animation:none!important}}
