@@ -1,5 +1,5 @@
 from pathlib import Path
-import json, time, urllib.request
+import json, re, time, urllib.request
 from playwright.sync_api import sync_playwright
 
 BASE = 'https://backwardssdrow-source.github.io/pac-site/makegood/'
@@ -8,18 +8,23 @@ OUT = Path('makegood-verification')
 OUT.mkdir(exist_ok=True)
 report = {'url': BASE, 'checks': [], 'errors': []}
 expected = {'coaching': 'Fee confirmed before booking', 'decision-session': '$1,250', 'practice-lab': '$2,500', 'erg-portfolio-diagnostic': '$9,000', 'erg-operating-model-build': '$18,000', 'fractional-erg-office': '$7,500', 'presence-scan': '$5,000', 'presence-lab': '$10,000', 'senior-presence-advisory': '$2,000'}
+removed_positioning = re.compile(r'remote[\s\-\u2010-\u2014]*first', re.I)
+source_files = {name: (Path('makegood') / name).read_bytes() for name in ('index.html', 'sunrise.js')}
 try:
-    # Allow GitHub Pages to publish this commit before checking the public URL.
+    for name, data in source_files.items():
+        assert not removed_positioning.search(data.decode()), f'Obsolete positioning in {name}'
+    # Wait for both published files to match the current commit, not an older preview.
     for attempt in range(40):
         try:
-            text = urllib.request.urlopen(BASE + 'sunrise.js?verify=' + str(time.time()), timeout=20).read().decode()
-            if 'brand-update.css' in text:
+            published = {name: urllib.request.urlopen(BASE + name + '?verify=' + str(time.time_ns()), timeout=20).read() for name in source_files}
+            if all(published[name] == data for name, data in source_files.items()):
                 break
         except Exception:
             pass
         time.sleep(10)
     else:
-        raise RuntimeError('New MakeGood route was not published within the verification window.')
+        raise RuntimeError('Published MakeGood source did not match the current commit within the verification window.')
+    report['checks'].append('Published HTML and JavaScript match the committed source; removed delivery positioning is absent')
     with sync_playwright() as pw:
         browser = pw.chromium.launch()
         page = browser.new_page(viewport={'width': 1440, 'height': 1000}, device_scale_factor=1)
@@ -27,6 +32,7 @@ try:
         page.on('pageerror', lambda error: errors.append(str(error)))
         response = page.goto(BASE, wait_until='networkidle')
         assert response.status == 200
+        assert not removed_positioning.search(page.content()), 'Stale homepage copy is still served'
         page.wait_for_function("getComputedStyle(document.querySelector('.brand img')).width === '190px'")
         assert page.title() == 'MakeGood Co. | Services and Founding Pricing'
         assert page.locator('link[rel=canonical]').get_attribute('href') == BASE
@@ -39,10 +45,12 @@ try:
         for service, fee in expected.items():
             page.goto(BASE + '#service-' + service, wait_until='networkidle')
             page.locator('#service-modal[open]').wait_for()
-            assert fee in page.locator('#service-body').inner_text(), service
+            detail_text = page.locator('#service-body').inner_text()
+            assert fee in detail_text, service
+            assert not removed_positioning.search(detail_text), service
             page.keyboard.press('Escape')
             assert not page.locator('#service-modal').evaluate('(el) => el.open')
-        report['checks'].append('All nine service-detail routes, including the Embedded tier within advisory, and Escape closing')
+        report['checks'].append('All nine service-detail routes, including the Embedded tier, revised wording and Escape closing')
         page.goto(BASE + '#services', wait_until='networkidle')
         page.locator('[data-filter=individual]').click()
         assert page.locator('.studio-grid').is_hidden()
@@ -62,6 +70,7 @@ try:
         for width in (390, 320):
             page.set_viewport_size({'width': width, 'height': 844})
             page.goto(BASE, wait_until='networkidle')
+            assert not removed_positioning.search(page.content())
             assert not page.evaluate('document.documentElement.scrollWidth > innerWidth + 1'), f'Horizontal overflow at {width}'
             page.screenshot(path=str(OUT / f'mobile-{width}-top.png'))
             page.locator('.menu-toggle').click()
@@ -69,6 +78,7 @@ try:
             page.keyboard.press('Escape')
             page.goto(BASE + '#service-decision-session', wait_until='networkidle')
             assert page.locator('#service-modal').evaluate('(el) => el.open')
+            assert not removed_positioning.search(page.locator('#service-body').inner_text())
             page.screenshot(path=str(OUT / f'mobile-{width}-details.png'))
         report['checks'].append('Mobile layout and menus at 390px and 320px')
         page.goto(OLD + '?ref=migration-check#/service/presence-scan', wait_until='networkidle')
@@ -81,7 +91,11 @@ try:
         assert not errors, errors
         browser.close()
     for name in ('index.html', 'sunrise.css', 'sunrise.js', 'brand-update.css', 'makegood-sunrise.svg'):
-        (OUT / name).write_bytes(urllib.request.urlopen(BASE + name, timeout=20).read())
+        data = urllib.request.urlopen(BASE + name + '?verify=' + str(time.time_ns()), timeout=20).read()
+        assert not removed_positioning.search(data.decode()), name
+        if name in source_files:
+            assert data == source_files[name], name
+        (OUT / name).write_bytes(data)
     report['status'] = 'passed'
 except Exception as error:
     report['status'] = 'failed'
