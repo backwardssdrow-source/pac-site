@@ -30,11 +30,11 @@ function openService(id){
  if(!serviceModal.open)serviceModal.showModal();
  document.title=s.name+' | MakeGood Co.';
 }
-function closeService(){serviceModal.close();if(location.hash.startsWith('#service-'))history.replaceState(null,'',location.href.split('#')[0]+'#services');document.title='MakeGood Co. — Coaching, Culture & Advisory';if(lastTrigger&&document.contains(lastTrigger))lastTrigger.focus({preventScroll:true});}
+function closeService(){serviceModal.close();if(location.hash.startsWith('#service-'))history.replaceState(null,'',location.href.split('#')[0]+'#services');document.title='Make Good | Services and Founding Pricing';if(lastTrigger&&document.contains(lastTrigger))lastTrigger.focus({preventScroll:true});}
 serviceModal.querySelector('.close').addEventListener('click',closeService);
 serviceModal.addEventListener('cancel',e=>{e.preventDefault();closeService();});
 serviceModal.addEventListener('click',e=>{if(e.target===serviceModal){const r=serviceModal.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)closeService();}});
-function route(){if(location.hash.startsWith('#service-')){openService(location.hash.slice(9));}else{if(serviceModal.open)serviceModal.close();document.title='MakeGood Co. — Coaching, Culture & Advisory';}}
+function route(){let raw;try{raw=decodeURIComponent(location.hash.slice(1));}catch{return;}let key=raw.replace(/^\/?service\//,'service-').replace(/^\//,'');const aliases={'coaching':'services','erg-studio':'services','presence-studio':'services','connect':'contact','service-embedded-senior-presence-advisory':'service-senior-presence-advisory'};key=aliases[key]||key;if(key!==raw){history.replaceState(null,'',location.href.split('#')[0]+'#'+key);}if(key.startsWith('service-')){openService(key.slice(8));}else{if(serviceModal.open)serviceModal.close();document.title='Make Good | Services and Founding Pricing';if(key!==raw)document.getElementById(key)?.scrollIntoView();}}
 addEventListener('hashchange',route);route();
 inquiryModal.querySelector('.close').addEventListener('click',()=>inquiryModal.close());
 inquiryModal.addEventListener('click',e=>{if(e.target===inquiryModal){const r=inquiryModal.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)inquiryModal.close();}});
