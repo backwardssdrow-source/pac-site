@@ -1,5 +1,5 @@
 from pathlib import Path
-import json, re, time, urllib.request
+import json, re, time, traceback, urllib.request
 from playwright.sync_api import sync_playwright
 
 BASE = 'https://backwardssdrow-source.github.io/pac-site/makegood/'
@@ -59,7 +59,9 @@ try:
             report['contrast_pairs'] = [{'colors': pair, 'ratio': round(contrast(*pair), 2)} for pair in pairs]
             assert all(contrast(*pair) >= 4.5 for pair in pairs)
             assert not re.search(r'[↗→↓]', page.locator('body').inner_text())
-            assert page.locator('.brandtext').inner_text().split() == ['People.', 'Culture.', 'Practice.']
+            # innerText includes text-transform: uppercase; the words/order must still match.
+            descriptor = page.locator('.brandtext').inner_text()
+            assert descriptor.casefold().split() == ['people.', 'culture.', 'practice.'], repr(descriptor)
             assert page.locator('.button.primary').first.evaluate('(el) => getComputedStyle(el).backgroundColor') == 'rgb(24, 63, 53)'
             report['checks'].append('Approved accent values and four AA text pairs; consistent descriptor; no decorative arrows')
         page.screenshot(path=str(OUT / 'desktop-top.png'))
@@ -117,7 +119,8 @@ try:
     report['status'] = 'passed'
 except Exception as error:
     report['status'] = 'failed'
-    report['errors'].append(str(error))
+    report['errors'].append(repr(error))
+    report['traceback'] = traceback.format_exc()
     raise
 finally:
     (OUT / 'report.json').write_text(json.dumps(report, indent=2))
