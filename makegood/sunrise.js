@@ -3,7 +3,6 @@ const pageTitle='MakeGood Co. | Services and Founding Pricing';
 document.title=pageTitle;
 const canonical=document.querySelector('link[rel="canonical"]')||document.head.appendChild(document.createElement('link'));
 canonical.rel='canonical';canonical.href='https://backwardssdrow-source.github.io/pac-site/makegood/';
-const brandCSS=document.createElement('link');brandCSS.rel='stylesheet';brandCSS.href='brand-update.css';document.head.appendChild(brandCSS);
 const services=JSON.parse(document.getElementById('services-data').textContent);
 const byId=Object.fromEntries(services.map(s=>[s.id,s]));
 const serviceModal=document.getElementById('service-modal');
@@ -29,7 +28,7 @@ function openService(id){
  const s=byId[id];if(!s)return;
  if(!serviceModal.open)lastTrigger=document.activeElement;
  document.getElementById('service-practice').textContent=s.practice;
- document.getElementById('service-body').innerHTML=`<h2 id="service-title">${esc(s.name)}</h2><p class="modal-price">${esc(s.fee)}${s.suffix?' <span style="font-size:14px;font-weight:400">'+esc(s.suffix)+'</span>':''}</p><p class="modal-meta">${esc(s.duration)} · USD</p><p class="modal-intro">${esc(s.details)}</p><h3>What you receive</h3><ul>${s.items.map(i=>'<li>'+esc(i)+'</li>').join('')}</ul><div class="modal-boundary">${esc(s.boundary)}</div><button class="button dark" id="inquire-service" type="button">Ask about this service <span class="arrow" aria-hidden="true">↗</span></button><p class="form-foot">Inquiry preview only. Scope and fee are confirmed before paid work begins.</p>`;
+ document.getElementById('service-body').innerHTML=`<h2 id="service-title">${esc(s.name)}</h2><p class="modal-price">${esc(s.fee)}${s.suffix?' <span style="font-size:14px;font-weight:400">'+esc(s.suffix)+'</span>':''}</p><p class="modal-meta">${esc(s.duration)} · USD</p><p class="modal-intro">${esc(s.details)}</p><h3>What you receive</h3><ul>${s.items.map(i=>'<li>'+esc(i)+'</li>').join('')}</ul><div class="modal-boundary">${esc(s.boundary)}</div><button class="button dark" id="inquire-service" type="button">Start a conversation</button><p class="form-foot">Inquiry preview only. Scope and fee are confirmed before paid work begins.</p>`;
  document.getElementById('inquire-service').addEventListener('click',()=>{serviceModal.close();document.getElementById('service-select').value=id;location.hash='contact';setTimeout(()=>document.querySelector('[name="name"]').focus({preventScroll:true}),150);});
  if(!serviceModal.open)serviceModal.showModal();
  document.title=s.name+' | MakeGood Co.';
@@ -50,3 +49,6 @@ document.querySelector('[name="name"]').addEventListener('input',e=>e.target.set
 document.querySelector('[name="message"]').addEventListener('input',e=>e.target.setCustomValidity(''));
 document.getElementById('copy-inquiry').addEventListener('click',async()=>{const text=document.getElementById('inquiry-text').textContent;const status=document.getElementById('copy-status');try{await navigator.clipboard.writeText(text);status.textContent='Copied to your clipboard. Nothing has been sent.';}catch{const sel=getSelection();const range=document.createRange();range.selectNodeContents(document.getElementById('inquiry-text'));sel.removeAllRanges();sel.addRange(range);status.textContent='Select and copy the highlighted text, or use Save as text.';}});
 document.getElementById('save-inquiry').addEventListener('click',()=>{const blob=new Blob([document.getElementById('inquiry-text').textContent],{type:'text/plain;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='MakeGood_Inquiry_Draft.txt';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);document.getElementById('copy-status').textContent='Your draft has been saved locally. Nothing has been sent.';});
+
+// Keep repeated service selections and keyboard navigation predictable.
+document.querySelectorAll('a[href^="#service-"]').forEach(link=>link.addEventListener('click',event=>{if(location.hash===link.getAttribute('href')){event.preventDefault();openService(location.hash.slice(9));}}));

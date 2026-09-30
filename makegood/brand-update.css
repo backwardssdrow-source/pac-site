@@ -1,13 +1,93 @@
-/* Sunrise brand-guide refinements; retain the supplied logo artwork. */
-html{scroll-padding-top:195px}
+/* Approved Sunrise extension, 30 September 2026. The primary SVG is unchanged.
+   Cream/Ink: page foundation. Evergreen: actions and dark fields.
+   Mulberry: selected headings. Clay: small accents on Cream only.
+   Sage: supporting surfaces with Ink text. Never use Clay text on Sage. */
+:root{--evergreen:#183F35;--mulberry:#4A213A;--clay:#974B36;--sage:#D7DDCB;--muted:#252820}
+html{scroll-padding-top:190px}
+body{background:var(--cream);color:var(--ink)}
 .nav .wrap{height:auto;min-height:170px;padding-block:8px}
-.brand img{width:190px;height:auto;max-width:none}
-.footer-brand img{width:190px;height:auto;max-width:none}
-.hero-mark{transform:none}
-.eyebrow .number{color:var(--ink)}
-.session-card>p,.section-head>p,.studio-row>p,.about-copy>p,.faq-list details p,.approach-item p{font-size:16px;line-height:1.6}
-.session-card{min-height:390px}
-.row-footer>span,.duration,.pricing-note,.contact-note,.form-note,.form-foot{font-size:12px;line-height:1.6}
-.modal-body p,.modal-body li{font-size:16px;line-height:1.6}
-@media(max-width:900px){.navlinks.open{top:100%}.brandtext{display:none}.nav .wrap{min-height:166px}.brand img{width:190px}.studio-row>p{max-width:100%}}
+.brand img,.footer-brand img{width:190px;height:auto;max-width:none}
+.brandtext{font-size:11px;line-height:1.7}
+.navlinks{gap:24px;font-size:14px}
+.previewbar,.footer{background:var(--evergreen);color:var(--cream)}
+.previewbar .wrap{min-height:38px}
+.previewbar,.previewbar span:last-child{font-size:12px;letter-spacing:.02em;opacity:1}
+.hero-mark{transform:none;max-width:455px}
+.brand-stage:before{background:var(--sage);transform:none}
+.stage-note{color:var(--evergreen);border-color:var(--evergreen);transform:none;font-size:11px}
+.stage-caption{color:var(--evergreen);font-size:11px;letter-spacing:.12em}
+h1{font-size:clamp(44px,4.8vw,68px);line-height:1.06;letter-spacing:-.055em}
+h1 em{color:var(--evergreen)}
+.hero-copy>p:not(.eyebrow){font-size:18px;max-width:510px}
+.hero-note{font-size:13px!important}
+.hero-bottom{font-size:13px}
+.eyebrow{font-size:12px;letter-spacing:.1em}
+.eyebrow .number,.service-label{color:var(--clay)}
+.tiny-line{background:var(--clay)}
+.button{font-size:14px;min-height:48px;gap:10px;transition:background .15s ease,color .15s ease;justify-content:center}
+.button:hover{transform:none;background:var(--sage)}
+.button.primary,.button.orange,.button.dark{background:var(--evergreen);border-color:var(--evergreen);color:var(--cream)}
+.button.primary:hover,.button.orange:hover,.button.dark:hover{background:var(--mulberry);border-color:var(--mulberry);color:var(--cream)}
+.button.light{background:var(--cream);color:var(--evergreen);border-color:var(--cream)}
+.button.light:hover{background:var(--sage);border-color:var(--sage)}
+a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid var(--evergreen);outline-offset:4px;box-shadow:0 0 0 4px var(--cream)}
+input:focus,select:focus,textarea:focus{outline:3px solid var(--evergreen);outline-offset:2px}
+.footer a:focus-visible,.approach a:focus-visible{outline-color:var(--cream);box-shadow:0 0 0 4px var(--evergreen)}
+.studio-strip{background:var(--sage);color:var(--ink)}
+.studio-strip .wrap{font-size:20px}
+.strip-dot{background:var(--evergreen);width:8px;height:8px}
+.filter{font-size:14px;min-height:44px;border-color:var(--evergreen)}
+.filter[aria-pressed=true]{background:var(--evergreen);border-color:var(--evergreen);color:var(--cream)}
+.service-label{font-size:12px;letter-spacing:.09em}
+.session-card,.session-card.coaching,.session-card.lab{background:var(--paper);border-color:var(--line);min-height:410px}
+.session-card.coaching{border-top:5px solid var(--evergreen)}
+.session-card.lab{border-top:5px solid var(--clay)}
+.card-type{font-size:11px;letter-spacing:.08em}
+.session-card h3{max-width:100%}
+.session-card>p,.section-head>p,.studio-row>p,.about-copy>p,.faq-list details p,.approach-item p{font-size:16px;line-height:1.65}
+.row-footer>span,.duration,.pricing-note,.contact-note,.form-note,.form-foot{font-size:13px;line-height:1.6;color:var(--ink)}
+.detail-link,.row-link{font-size:14px;min-height:44px;color:var(--evergreen);text-decoration:underline;text-underline-offset:4px;justify-content:flex-start}
+.detail-link:hover,.row-link:hover{color:var(--mulberry)}
+.studio-head,.presence .studio-head{background:var(--cream)}
+.studio-head h3{color:var(--evergreen)}
+.presence .studio-head h3{color:var(--mulberry)}
+.studio-head>p:last-child{font-size:16px;max-width:none}
+.studio-head .eyebrow{font-size:11px;color:var(--ink)}
+.embedded{background:var(--sage);font-size:14px;color:var(--ink)}
+.embedded b{font-size:14px}
+.approach{background:var(--evergreen);color:var(--cream)}
+.approach .section-head>p,.approach-item p,.principle p{color:var(--cream)}
+.step-number{font-size:13px}
+.principle>span{font-size:12px}
+.about-art{background:var(--sage)}
+.art-caption{color:var(--evergreen);font-size:11px;letter-spacing:.08em}
+.paper-card span{font-size:10px}
+.founders span{font-size:13px}
+.purpose{border-top:1px solid var(--line);padding-top:22px;margin-top:25px}
+.purpose h3{font-size:17px;color:var(--mulberry);margin:0 0 8px}
+.purpose p{font-size:16px;line-height:1.65;margin:0 0 20px}
+.faq-section{background:var(--cream)}
+.faq-list summary{font-size:16px;min-height:44px}
+.faq-copy>p{font-size:16px}
+.contact-section{background:var(--sage);color:var(--ink)}
+.contact-copy .eyebrow .number{color:var(--evergreen)}
+.contact-copy>p{font-size:17px}
+.inquiry .button{justify-content:center}
+label{font-size:14px}
+input,select,textarea{font-size:16px;min-height:48px;border-color:var(--evergreen)}
+input::placeholder,textarea::placeholder{color:var(--ink);opacity:1}
+.footer-main{gap:35px}
+.footer-caption{font-size:16px;color:var(--cream)}
+.footer-links{font-size:14px}
+.footer-links a{min-height:44px;display:inline-flex;align-items:center;text-decoration:underline;text-underline-offset:5px}
+.footer-bottom{font-size:12px;color:var(--cream);opacity:1}
+.modal-body p,.modal-body li{font-size:16px;line-height:1.65}
+.modal-price{color:var(--evergreen)}
+.modal-boundary{background:var(--sage);color:var(--ink)}
+.close{min-width:44px;min-height:44px}
+.menu-toggle{min-height:44px;min-width:72px;border-color:var(--evergreen);color:var(--evergreen)}
+@media(max-width:1050px){.brandtext{display:none}.navlinks{gap:16px}.navlinks .button{padding-inline:15px}}
+@media(max-width:900px){html{scroll-padding-top:165px}.nav .wrap{min-height:150px}.brand img{width:160px}.menu-toggle{display:block}.navlinks{display:none;position:absolute;top:100%;left:0;right:0;background:var(--cream);padding:20px 24px;border-bottom:1px solid var(--line);flex-direction:column;align-items:stretch;gap:8px}.navlinks.open{display:flex}.navlinks>a{padding:10px 12px;min-height:44px}.studio-row>p{max-width:100%}.hero-grid{grid-template-columns:1fr;gap:24px}.hero-copy{max-width:680px}.hero-copy>p:not(.eyebrow){max-width:620px}.brand-stage{max-width:500px;width:100%;min-height:370px;margin:auto}.hero-mark{max-width:400px}.session-grid{grid-template-columns:1fr}.session-card{min-height:300px}.studio-grid{grid-template-columns:1fr}}
+@media(max-width:780px){h1{font-size:clamp(40px,8vw,58px)}.hero-copy>p:not(.eyebrow){font-size:17px}.previewbar .wrap{font-size:11px;flex-wrap:wrap;gap:0;padding-block:6px}.previewbar span:last-child{font-size:10px}.brand-stage{min-height:315px}.hero-mark{max-width:330px}.stage-note{font-size:10px}.studio-strip .wrap{font-size:14px;flex-wrap:wrap;justify-content:center;padding-block:18px;gap:12px}.studio-strip .wrap>span:last-child,.studio-strip .wrap>.strip-dot:last-of-type{display:none}.approach-item{display:block}.step-number{margin:0 0 14px}.session-card{padding:25px}.section-head>p{font-size:16px}.principle p{font-size:16px}.about-copy h2{font-size:36px}.art-caption{left:20px;right:20px;text-align:center}.footer-caption{font-size:15px}.footer-bottom{font-size:12px}.modal-body h2{font-size:30px}.footer-links{gap:8px 22px}}
+@media(max-width:390px){h1,.hero h1{font-size:40px}.row-title{flex-wrap:wrap;gap:10px}.row-title h4{font-size:18px;max-width:100%}.row-price{text-align:left}.row-footer{flex-wrap:wrap;gap:4px}.button{font-size:14px}.contact-copy h2{font-size:39px}.stage-caption{font-size:10px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{transition:none!important;animation:none!important}}
