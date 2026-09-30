@@ -1,0 +1,44 @@
+name: Build and test MakeGood standalone pages
+on:
+  push:
+    branches: ['makegood-multipage-*']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: makegood-multipage-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build and browser dependencies
+        run: |
+          python -m pip install beautifulsoup4 playwright
+          python -m playwright install --with-deps chromium
+      - name: Generate standalone HTML pages
+        run: python .github/scripts/build-makegood-multipage.py
+      - name: Verify pages before publishing
+        env:
+          MAKEGOOD_LOCAL: '1'
+        run: python .github/scripts/verify-makegood.py
+      - name: Save generated site and visual checks
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: makegood-multipage-build
+          path: |
+            makegood/
+            makegood-verification/
+          retention-days: 7
+      - name: Commit tested pages to the review branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- makegood
+          if ! git diff --cached --quiet; then
+            git commit -m 'Generate tested MakeGood standalone pages'
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
