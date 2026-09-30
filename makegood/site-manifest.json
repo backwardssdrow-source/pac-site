@@ -1,0 +1,22 @@
+{
+  "revision": "20260930-multipage-1",
+  "pages": [
+    "index.html",
+    "services.html",
+    "approach.html",
+    "about.html",
+    "faq.html",
+    "contact.html",
+    "services/coaching.html",
+    "services/decision-session.html",
+    "services/practice-lab.html",
+    "services/erg-portfolio-diagnostic.html",
+    "services/erg-operating-model-build.html",
+    "services/fractional-erg-office.html",
+    "services/presence-scan.html",
+    "services/presence-lab.html",
+    "services/senior-presence-advisory.html"
+  ],
+  "service_count": 9,
+  "original_logo_unchanged": true
+}
