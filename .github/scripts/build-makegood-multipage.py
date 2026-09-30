@@ -1,6 +1,8 @@
 """Build standalone MakeGood pages from the approved copy snapshot.
 Run from repository root: python .github/scripts/build-makegood-multipage.py
-The snapshot preserves all service fees, scopes and terms; this build changes navigation.
+The snapshot preserves all service fees, scopes and terms.
+Founder-approved mission/vision in makegood-approved-messaging.json override
+older purpose/vision language in the original migration snapshot.
 """
 from pathlib import Path
 from copy import deepcopy
@@ -10,6 +12,20 @@ from bs4 import BeautifulSoup
 
 ROOT = Path('makegood')
 SOURCE = BeautifulSoup(Path('.github/makegood-source.html').read_text(), 'html.parser')
+APPROVED = json.loads(Path('.github/makegood-approved-messaging.json').read_text(encoding='utf-8'))
+purpose = SOURCE.select_one('#about .purpose')
+if purpose is None:
+    raise ValueError('About-page mission/vision container is missing.')
+purpose.clear()
+for label, key in (('Our mission', 'mission'), ('Our vision', 'vision')):
+    value = APPROVED.get(key)
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(f'Approved {key} must be a nonempty string.')
+    heading = SOURCE.new_tag('h3')
+    heading.string = label
+    paragraph = SOURCE.new_tag('p')
+    paragraph.string = value
+    purpose.extend([heading, paragraph])
 SERVICES = json.loads(SOURCE.select_one('#services-data').string)
 BASE = 'https://backwardssdrow-source.github.io/pac-site/makegood/'
 REV = '20260930-multipage-1'
@@ -125,12 +141,13 @@ The site has six main pages and nine service-detail pages. Navigation uses real 
 The approved Sunrise logo, palette, pricing and service scopes are preserved. The circular hero badge is removed from the markup.
 
 ## Sources
-- `.github/makegood-source.html`: approved content snapshot before the multipage migration.
+- `.github/makegood-approved-messaging.json`: exact mission and vision approved by LT and Travis. This overrides the older purpose/vision copy in the migration snapshot.
+- `.github/makegood-source.html`: content snapshot before the multipage migration; source for service descriptions, fees, scopes and terms.
 - `.github/scripts/build-makegood-multipage.py`: deterministic page builder (requires BeautifulSoup4).
 - `sunrise.css` and `brand-update.css`: existing design and approved color extension.
 - `pages.css` and `pages.js`: multipage layout and progressive enhancements.
 
-Edit the snapshot or builder for copy changes, then regenerate to keep shared navigation consistent. Do not restore the original single-page navigation or load `sunrise.js` on these pages.
+Keep mission and vision verbatim. Service descriptions and the People. Culture. Practice. descriptor are supporting copy, not replacement mission/vision statements. Edit the approved messaging file, snapshot or builder as appropriate, then regenerate. Do not restore single-page navigation or load `sunrise.js` on these pages.
 
 ## Preview limitations
 The inquiry preview sends nothing, stores nothing, and makes no booking or charge. A user may explicitly copy the draft or save a text file to their own device.
