@@ -1,0 +1,49 @@
+name: MakeGood palette and accessibility update
+on:
+  push:
+    branches: ['makegood-brand-a11y-20261001']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: makegood-visual-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install browser and accessibility checks
+        run: |
+          python -m pip install beautifulsoup4 playwright
+          python -m playwright install --with-deps chromium
+          npm install --no-save axe-core
+      - name: Apply approved palette and copy changes
+        run: |
+          python .github/scripts/update-makegood-v14.py
+          python .github/scripts/build-makegood-multipage.py
+      - name: Check all pages, service content and interactions
+        env:
+          MAKEGOOD_LOCAL: '1'
+        run: python .github/scripts/verify-makegood.py
+      - name: Check accessibility, reflow and exact colors
+        run: python .github/scripts/verify-makegood-accessibility.py
+      - name: Save page screenshots and reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: makegood-v14-accessibility
+          path: |
+            makegood/
+            makegood-verification/
+          retention-days: 7
+      - name: Commit tested changes to review branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- makegood .github/makegood-approved-messaging.json .github/makegood-source.html .github/scripts/build-makegood-multipage.py .github/scripts/verify-makegood.py
+          if ! git diff --cached --quiet; then
+            git commit -m 'Apply tested MakeGood v1.4 palette, approved descriptor and accessible headings'
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
