@@ -1,0 +1,28 @@
+name: Verify live MakeGood readability
+on:
+  push:
+    branches: [gh-pages]
+    paths: ['makegood/**', '.github/scripts/verify-makegood-readability.py', '.github/workflows/verify-makegood-readability.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  readability:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install browser and accessibility checks
+        run: |
+          python -m pip install playwright
+          python -m playwright install --with-deps chromium
+          npm install --no-save axe-core
+      - name: Verify published source and readable text
+        run: python .github/scripts/verify-makegood-readability.py
+      - name: Save live screenshots and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: makegood-live-readability
+          path: readability-live/
+          retention-days: 7
