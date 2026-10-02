@@ -42,7 +42,7 @@ if not local:
   raise AssertionError('Published bytes differ: '+path)
  with ThreadPoolExecutor(max_workers=6) as pool: list(pool.map(matches,paths))
 
-backgrounds={'cream':'rgb(250, 247, 242)','blush':'rgb(242, 166, 162)','charcoal':'rgb(31, 46, 42)','teal':'rgb(46, 125, 122)','indigo':'rgb(46, 58, 140)','lilac':'rgb(201, 180, 218)','gold':'rgb(244, 172, 12)'}
+backgrounds={'cream':'rgb(250, 247, 242)','blush':'rgb(249, 237, 232)','charcoal':'rgb(236, 234, 224)','teal':'rgb(236, 234, 224)','indigo':'rgb(249, 233, 225)','lilac':'rgb(250, 241, 224)','gold':'rgb(250, 241, 224)'}
 report={'revision':REV,'base':BASE,'published_byte_matches':not local,'pages':[],'checks':[]}
 with sync_playwright() as pw:
  options={'headless':True}

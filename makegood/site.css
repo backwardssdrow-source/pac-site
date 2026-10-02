@@ -290,7 +290,7 @@ html{overflow-x:clip} .wrap{max-width:calc(100% - 2.5rem)}
 
 
 /* Page backgrounds and founder biographies / 1 October 2026.
-   Solid, exact brand-guide colors only: no added shades, gradients or tints. */
+   Brand-guide colors remain the source. Full-page fields use restrained tints of the four Sunrise colors; supporting accents stay selective. */
 body.palette-page { background:var(--page-bg); color:var(--page-fg); }
 .multipage.palette-page main,
 .multipage.palette-page main > .section,
@@ -472,3 +472,52 @@ body.multipage .footer nav.footer-links > a {
 .page-services .studio-row .advisory-upgrade p{margin:0 0 9px;max-width:none;font-size:.875rem;line-height:1.55;color:var(--charcoal)}
 .page-services .studio-row .advisory-upgrade .upgrade-meta{font-size:.8125rem;margin-bottom:8px}
 .page-services .studio-row .advisory-upgrade a{font-weight:600;color:var(--indigo);text-decoration:underline;text-underline-offset:.2em}
+
+
+/* PRIMARY-COLOR WASHES / 1 October 2026 */
+:root{
+  --sunrise-wash:#F9E9E1;
+  --blush-wash:#F9EDE8;
+  --gold-wash:#FAF1E0;
+  --olive-wash:#ECEAE0;
+}
+.palette-page[data-page-background="cream"]{--page-bg:var(--cream)!important;--page-fg:var(--charcoal)!important}
+.palette-page[data-page-background="blush"]{--page-bg:var(--blush-wash)!important;--page-fg:var(--charcoal)!important}
+.palette-page[data-page-background="gold"]{--page-bg:var(--gold-wash)!important;--page-fg:var(--charcoal)!important}
+.palette-page[data-page-background="lilac"]{--page-bg:var(--gold-wash)!important;--page-fg:var(--charcoal)!important}
+.palette-page[data-page-background="teal"]{--page-bg:var(--olive-wash)!important;--page-fg:var(--charcoal)!important}
+.palette-page[data-page-background="indigo"]{--page-bg:var(--sunrise-wash)!important;--page-fg:var(--charcoal)!important}
+.palette-page[data-page-background="charcoal"]{--page-bg:var(--olive-wash)!important;--page-fg:var(--charcoal)!important}
+
+.palette-page.dark-page-field main .detail-copy>h1,
+.palette-page.dark-page-field main .detail-copy>h2,
+.palette-page.dark-page-field main .detail-copy>p,
+.palette-page.dark-page-field main .detail-copy>ul,
+.palette-page.dark-page-field main .detail-copy>.tier-price,
+.palette-page.dark-page-field main .contact-copy,
+.palette-page.dark-page-field main .contact-copy>h1,
+.palette-page.dark-page-field main .contact-copy>p,
+.palette-page.dark-page-field main .contact-note,
+.palette-page.dark-page-field main .faq-copy,
+.palette-page.dark-page-field main .faq-copy>p,
+.palette-page.dark-page-field main .faq-copy>h1,
+.palette-page.dark-page-field .detail-copy>.eyebrow{color:var(--charcoal)!important}
+.palette-page.dark-page-field main .contact-note{border-color:var(--charcoal)!important}
+.palette-page.dark-page-field main>.breadcrumbs a:focus-visible{outline-color:var(--indigo);box-shadow:0 0 0 4px var(--page-bg)}
+
+.page-approach.palette-page main,.page-approach.palette-page .approach{background:var(--page-bg)!important;color:var(--charcoal)!important}
+.page-approach .breadcrumbs,.page-approach main h1,.page-approach .approach-item h2,.approach .section-head>p,.approach-item p,.principle p{color:var(--charcoal)!important}
+.page-approach .approach-item,.page-approach .principle{border-color:#C9C8B5}
+.page-approach.palette-page main a:focus-visible{outline-color:var(--indigo);box-shadow:0 0 0 4px var(--page-bg)}
+
+.page-services .studio-panel.erg .studio-head,.page-services .studio-panel.presence .studio-head{background:var(--cream)!important;color:var(--charcoal)!important}
+.page-services .studio-panel.erg .studio-head{border-top:5px solid var(--teal)}
+.page-services .studio-panel.presence .studio-head{border-top:5px solid var(--indigo)}
+.page-services .studio-head h3,.page-services .studio-head p,.page-services .studio-head .eyebrow{color:var(--charcoal)!important}
+.page-services .studio-panel.erg .studio-head .eyebrow{color:var(--teal)!important}
+.page-services .studio-panel.presence .studio-head .eyebrow{color:var(--indigo)!important}
+.page-services .advisory-upgrade,.embedded{background:var(--gold-wash)!important;border-left:4px solid var(--indigo)}
+
+.scope-boundary{background:var(--gold-wash)!important;border-left:4px solid var(--terracotta)}
+.page-contact.palette-page .inquiry{border-top:5px solid var(--teal)}
+.page-faq.palette-page .faq-list{border-top:5px solid var(--indigo)}
