@@ -465,3 +465,10 @@ body.multipage .footer nav.footer-links > a {
   font-family:Inter,Arial,Helvetica,sans-serif;
   font-weight:500;
 }
+
+/* Leadership Advisory upgrade is part of the same service, not a separate service card. */
+.page-services .studio-row .advisory-upgrade{margin:22px 0 2px;padding:16px 18px;border:1px solid var(--line);border-radius:8px;background:var(--lilac);color:var(--charcoal);font-size:.875rem;line-height:1.55}
+.page-services .studio-row .advisory-upgrade b{display:block;font-size:.875rem;margin-bottom:6px}
+.page-services .studio-row .advisory-upgrade p{margin:0 0 9px;max-width:none;font-size:.875rem;line-height:1.55;color:var(--charcoal)}
+.page-services .studio-row .advisory-upgrade .upgrade-meta{font-size:.8125rem;margin-bottom:8px}
+.page-services .studio-row .advisory-upgrade a{font-weight:600;color:var(--indigo);text-decoration:underline;text-underline-offset:.2em}
