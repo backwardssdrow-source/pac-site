@@ -1,0 +1,39 @@
+name: MakeGood readability review
+on:
+  push:
+    branches: [makegood-readability-20261002]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install browser checks
+        run: |
+          python -m pip install playwright beautifulsoup4
+          python -m playwright install --with-deps chromium
+          npm install --no-save axe-core
+      - name: Compare and test all pages
+        run: python .github/scripts/review-makegood-readability.py
+      - name: Save source and review evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: makegood-readability-review
+          path: |
+            makegood/
+            readability-review/
+            node_modules/axe-core/axe.min.js
+          retention-days: 7
+      - name: Commit tested pages to review branch only
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- makegood
+          if ! git diff --cached --quiet; then
+            git commit -m 'Apply and test MakeGood readability improvements'
+            git push origin HEAD:makegood-readability-20261002
+          fi

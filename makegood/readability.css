@@ -1,0 +1,97 @@
+/* Readability pass, 2 October 2026.
+   Keep the approved primary-color washes, logo, layout and compact footer controls.
+   Gold/blush/terracotta decorate; charcoal carries reading text on light surfaces. */
+body.multipage{font-family:Inter,Arial,Helvetica,sans-serif;line-height:1.65;-webkit-font-smoothing:auto}
+body.multipage main{color:var(--charcoal)}
+body.multipage main h1{letter-spacing:-.02em;line-height:1.16}
+body.multipage main h2,body.multipage main h3,body.multipage main h4{letter-spacing:-.015em;line-height:1.3}
+body.multipage .hero h1{line-height:1.12}
+body.multipage .hero-copy>p:not(.eyebrow),
+body.multipage .section-head>p,
+body.multipage .path-card>p:not(.eyebrow),
+body.multipage .session-card>p,
+body.multipage .studio-row>p,
+body.multipage .studio-head>p:not(.eyebrow),
+body.multipage .approach-item>p,
+body.multipage .principle>p,
+body.multipage .about-copy>p,
+body.multipage .purpose>p,
+body.multipage .founder-bio>p,
+body.multipage .bio-coming-soon,
+body.multipage .faq-list details p,
+body.multipage .faq-copy>p,
+body.multipage .contact-copy>p,
+body.multipage .detail-copy>p:not(.eyebrow):not(.tier-price),
+body.multipage .scope-list li,
+body.multipage .scope-boundary p{font-size:1.125rem;line-height:1.7;color:var(--charcoal);max-width:65ch}
+body.multipage .detail-copy .detail-intro{font-size:1.25rem!important;line-height:1.6}
+body.multipage .detail-copy>p,body.multipage .about-copy>p,body.multipage .founder-bio>p{margin-bottom:1.25rem}
+body.multipage .scope-list li{margin-bottom:1rem}
+body.multipage .breadcrumbs,
+body.multipage .duration,
+body.multipage .detail-duration,
+body.multipage .detail-note,
+body.multipage .row-footer>span,
+body.multipage .row-price span,
+body.multipage .pricing-note,
+body.multipage .contact-note,
+body.multipage .form-note,
+body.multipage .form-foot,
+body.multipage .filter-status,
+body.multipage .tier-note{font-size:1rem;line-height:1.6}
+body.multipage .eyebrow,
+body.multipage .path-card .eyebrow,
+body.multipage .studio-head .eyebrow,
+body.multipage .detail-summary .eyebrow,
+body.multipage .card-type,
+body.multipage .step-number,
+body.multipage .principle>span,
+body.multipage .founder-role{font-size:.9375rem;line-height:1.5;letter-spacing:.025em;text-transform:none;color:var(--charcoal);font-weight:600}
+body.page-services .studio-panel.erg .studio-head .eyebrow,
+body.page-services .studio-panel.presence .studio-head .eyebrow{color:var(--charcoal)!important}
+body.page-approach .step-number,body.page-approach .principle>span{color:var(--charcoal)!important}
+body.page-approach .step-number{margin-bottom:1.25rem}
+body.page-approach .principle>span{flex-shrink:0}
+body.multipage .service-label{letter-spacing:-.01em;line-height:1.35}
+body.multipage .session-card h3{line-height:1.3}
+body.multipage .row-title h4{font-size:1.25rem;line-height:1.35}
+body.multipage .row-title{flex-wrap:wrap;gap:.75rem 1.25rem}
+body.multipage .row-price{font-size:1.25rem;line-height:1.4;letter-spacing:0}
+body.multipage .row-footer{flex-wrap:wrap;align-items:center;gap:.5rem 1.25rem}
+body.multipage a.button,
+body.multipage button,
+body.multipage .filter,
+body.multipage .menu-toggle,
+body.multipage .text-link,
+body.multipage .detail-link,
+body.multipage .row-link{font-size:1rem;line-height:1.5;font-weight:500;letter-spacing:0}
+body.multipage .text-link,
+body.multipage .detail-link,
+body.multipage .row-link{color:var(--indigo);text-decoration:underline;text-underline-offset:.22em}
+body.multipage .text-link:hover,body.multipage .detail-link:hover,body.multipage .row-link:hover{color:var(--charcoal)}
+body.page-services .studio-row .advisory-upgrade{font-size:1rem;line-height:1.65}
+body.page-services .studio-row .advisory-upgrade b{font-size:1rem;line-height:1.5}
+body.page-services .studio-row .advisory-upgrade p{font-size:1.0625rem;line-height:1.65}
+body.page-services .studio-row .advisory-upgrade .upgrade-meta{font-size:1rem;line-height:1.6}
+body.page-services .studio-row .advisory-upgrade a{display:inline-flex;align-items:center;min-height:2rem;font-size:1rem}
+body.multipage .faq-list summary{font-size:1.125rem;line-height:1.5}
+body.multipage label,body.multipage input,body.multipage select,body.multipage textarea{font-size:1rem;line-height:1.5}
+body.multipage .brandtext{font-size:.875rem;line-height:1.6;letter-spacing:.035em}
+body.multipage .navlinks{font-size:1rem}
+body.multipage .navlinks>a{min-height:2.75rem;display:inline-flex;align-items:center}
+body.multipage .footer-caption{font-size:1rem;line-height:1.65}
+/* Keep the requested compact footer: type remains 14px/500; touch controls stay 44px. */
+body.multipage .footer nav.footer-links>a{font-size:.875rem;font-weight:500;line-height:1.3;letter-spacing:0}
+body.multipage .footer-bottom{font-size:.875rem;line-height:1.6}
+body.multipage .button,body.multipage .filter,body.multipage .menu-toggle{height:auto}
+body.multipage .button{white-space:normal;text-align:center}
+body.multipage .scope-boundary,body.multipage .detail-summary,body.multipage .inquiry,body.multipage .faq-list,body.multipage .founder-card{min-width:0}
+body.multipage .principle{flex-wrap:wrap;gap:.75rem 1.5rem}
+body.multipage main a:focus-visible,body.multipage main button:focus-visible,
+body.multipage main summary:focus-visible,body.multipage main input:focus-visible,
+body.multipage main select:focus-visible,body.multipage main textarea:focus-visible{outline:3px solid var(--indigo);outline-offset:4px;box-shadow:0 0 0 4px var(--cream)}
+/* At high zoom, navigation scrolls with the page instead of covering reading content. */
+@media(max-width:900px){body.multipage .nav{position:relative}body.multipage .navlinks>a{width:100%}body.multipage .brandtext{display:none}body.multipage .detail-copy .detail-intro{font-size:1.1875rem!important}}
+@media(max-width:600px){body.multipage .faq-list{padding:1.25rem}body.multipage .row-title{align-items:flex-start}body.multipage .row-price{text-align:left}body.multipage .brandtext{display:none}}
+@media(prefers-reduced-motion:reduce){body.multipage *,body.multipage *:before,body.multipage *:after{transition:none!important;animation:none!important}html{scroll-behavior:auto}}
+@media(forced-colors:active){body.multipage main a:focus-visible,body.multipage main button:focus-visible,body.multipage main summary:focus-visible{outline-color:Highlight;box-shadow:none}}
