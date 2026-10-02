@@ -1,22 +1,103 @@
 {
-  "revision": "20260930-multipage-1",
+  "revision": "20261001-approved-compact-live",
   "pages": [
-    "index.html",
-    "services.html",
-    "approach.html",
     "about.html",
-    "faq.html",
+    "approach.html",
     "contact.html",
+    "faq.html",
+    "index.html",
     "services/coaching.html",
     "services/decision-session.html",
-    "services/practice-lab.html",
-    "services/erg-portfolio-diagnostic.html",
     "services/erg-operating-model-build.html",
+    "services/erg-portfolio-diagnostic.html",
     "services/fractional-erg-office.html",
-    "services/presence-scan.html",
+    "services/practice-lab.html",
     "services/presence-lab.html",
-    "services/senior-presence-advisory.html"
+    "services/presence-scan.html",
+    "services/senior-presence-advisory.html",
+    "services.html"
   ],
   "service_count": 9,
-  "original_logo_unchanged": true
+  "original_logo_unchanged": true,
+  "copy": "Approved edited copy",
+  "booking_connected": false,
+  "payment_connected": false,
+  "inquiry_sends": false,
+  "expected": {
+    "about.html": {
+      "title": "About | MakeGood Co.",
+      "h1": "About MakeGood.",
+      "background": "blush"
+    },
+    "approach.html": {
+      "title": "Our approach | MakeGood Co.",
+      "h1": "Listen carefully. Make it practical.",
+      "background": "charcoal"
+    },
+    "contact.html": {
+      "title": "Start a conversation | MakeGood Co.",
+      "h1": "What would you like help with?",
+      "background": "teal"
+    },
+    "faq.html": {
+      "title": "Frequently asked questions | MakeGood Co.",
+      "h1": "Before we start.",
+      "background": "indigo"
+    },
+    "index.html": {
+      "title": "Better ways of working. Built with people. | MakeGood Co.",
+      "h1": "Better ways of working. Built with people.",
+      "background": "cream"
+    },
+    "services/coaching.html": {
+      "title": "Coaching & Thought Partnership | MakeGood Co.",
+      "h1": "Coaching & Thought Partnership",
+      "background": "blush"
+    },
+    "services/decision-session.html": {
+      "title": "Decision Session | MakeGood Co.",
+      "h1": "Decision Session",
+      "background": "gold"
+    },
+    "services/erg-operating-model-build.html": {
+      "title": "ERG Operating Model Build | MakeGood Co.",
+      "h1": "ERG Operating Model Build",
+      "background": "teal"
+    },
+    "services/erg-portfolio-diagnostic.html": {
+      "title": "ERG Portfolio Diagnostic | MakeGood Co.",
+      "h1": "ERG Portfolio Diagnostic",
+      "background": "teal"
+    },
+    "services/fractional-erg-office.html": {
+      "title": "Fractional ERG Office | MakeGood Co.",
+      "h1": "Fractional ERG Office",
+      "background": "teal"
+    },
+    "services/practice-lab.html": {
+      "title": "Practice Lab | MakeGood Co.",
+      "h1": "Practice Lab",
+      "background": "lilac"
+    },
+    "services/presence-lab.html": {
+      "title": "Presence Lab | MakeGood Co.",
+      "h1": "Presence Lab",
+      "background": "lilac"
+    },
+    "services/presence-scan.html": {
+      "title": "Presence Scan | MakeGood Co.",
+      "h1": "Presence Scan",
+      "background": "lilac"
+    },
+    "services/senior-presence-advisory.html": {
+      "title": "Leadership Advisory | MakeGood Co.",
+      "h1": "Leadership Advisory",
+      "background": "indigo"
+    },
+    "services.html": {
+      "title": "Services and founding fees | MakeGood Co.",
+      "h1": "How we can help.",
+      "background": "lilac"
+    }
+  }
 }
