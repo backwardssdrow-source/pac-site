@@ -1,5 +1,5 @@
 {
-  "revision": "20261001-approved-compact-live",
+  "revision": "20261001-mission-refresh-live",
   "pages": [
     "about.html",
     "approach.html",
@@ -45,8 +45,8 @@
       "background": "indigo"
     },
     "index.html": {
-      "title": "Better ways of working. Built with people. | MakeGood Co.",
-      "h1": "Better ways of working. Built with people.",
+      "title": "More human ways of working. Built with people. | MakeGood Co.",
+      "h1": "More human ways of working. Built with people.",
       "background": "cream"
     },
     "services/coaching.html": {
