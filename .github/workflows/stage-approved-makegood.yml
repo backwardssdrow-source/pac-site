@@ -1,0 +1,59 @@
+name: Stage approved MakeGood release
+on:
+  push:
+    branches: ['makegood-publish-20261001-compact']
+    paths: ['.github/makegood-approved-release/**', '.github/workflows/stage-approved-makegood.yml']
+permissions:
+  contents: write
+concurrency:
+  group: makegood-approved-staging
+  cancel-in-progress: false
+jobs:
+  stage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unpack the exact approved release
+        run: |
+          python - <<'PY'
+          from pathlib import Path, PurePosixPath
+          import hashlib, lzma, json
+          pieces=sorted(Path('.github/makegood-approved-release').glob('part-*.xz'))
+          assert len(pieces)==4
+          packed=b''.join(p.read_bytes() for p in pieces)
+          assert hashlib.sha256(packed).hexdigest()=='ccc7b3b4fd4aba049ad18d2841f1dc6aae6f714a3764109b08404805a6b46f73'
+          files=json.loads(lzma.decompress(packed))
+          for name, content in files.items():
+              path=PurePosixPath(name)
+              assert not path.is_absolute() and '..' not in path.parts
+              assert name.startswith('makegood/') or name=='.github/scripts/verify-makegood.py'
+              dest=Path(name); dest.parent.mkdir(parents=True,exist_ok=True)
+              dest.write_text(content,encoding='utf-8')
+          assert len(list(Path('makegood').rglob('*.html')))==15
+          print('Restored',len(files),'approved source files.')
+          PY
+      - name: Install browser verification
+        run: |
+          python -m pip install playwright
+          python -m playwright install --with-deps chromium
+      - name: Check all approved pages before publishing
+        env:
+          MAKEGOOD_LOCAL: '1'
+        run: python .github/scripts/verify-makegood.py
+      - name: Save source, screenshots and verification report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: approved-makegood-release
+          path: |
+            makegood/
+            makegood-verification/
+          retention-days: 7
+      - name: Commit verified source to staging only
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- makegood .github/scripts/verify-makegood.py
+          git commit -m 'Stage verified approved MakeGood copy, palette, bios and compact buttons'
+          git push origin HEAD:makegood-publish-20261001-compact
