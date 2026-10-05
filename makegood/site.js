@@ -1,92 +1,16 @@
-
-/* Progressive enhancements only. Page content and navigation are real HTML. */
-(() => {
-  'use strict';
-  const serviceIds = ["coaching", "decision-session", "practice-lab", "erg-portfolio-diagnostic", "erg-operating-model-build", "fractional-erg-office", "presence-scan", "presence-lab", "senior-presence-advisory"];
-  const toggle = document.querySelector('.menu-toggle');
-  const navigation = document.querySelector('#navigation');
-  function closeMenu() {
-    if (!toggle || !navigation) return;
-    navigation.classList.remove('open');
-    toggle.setAttribute('aria-expanded', 'false');
-  }
-  if (toggle && navigation) {
-    toggle.addEventListener('click', () => {
-      const open = toggle.getAttribute('aria-expanded') !== 'true';
-      navigation.classList.toggle('open', open);
-      toggle.setAttribute('aria-expanded', String(open));
-    });
-    document.addEventListener('keydown', event => {
-      if (event.key === 'Escape' && navigation.classList.contains('open')) { closeMenu(); toggle.focus(); }
-    });
-    navigation.addEventListener('click', event => { if (event.target.closest('a')) closeMenu(); });
-  }
-  const query = new URLSearchParams(window.location.search);
-  const filterButtons = Array.from(document.querySelectorAll('[data-filter]'));
-  if (filterButtons.length) {
-    const categories = {all:'All services',individual:'Services for individuals',erg:'Services for ERG programs',presence:'Services for leaders and teams'};
-    function filter(category) {
-      if (!(category in categories)) category = 'all';
-      filterButtons.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.filter === category)));
-      document.querySelectorAll('[data-service-category]').forEach(card => {
-        const kind = card.dataset.serviceCategory;
-        card.hidden = !(category === 'all' || kind === category || (kind === 'focused' && (category === 'erg' || category === 'presence')));
-      });
-      [['.session-grid','#sessions-label'],['.studio-grid','#studio-label']].forEach(([gridSelector,labelSelector]) => {
-        const grid = document.querySelector(gridSelector);
-        const label = document.querySelector(labelSelector);
-        const visible = grid && Array.from(grid.children).some(child => !child.hidden);
-        if (grid) grid.hidden = !visible;
-        if (label) label.hidden = !visible;
-      });
-      const count = document.querySelectorAll('.session-card:not([hidden])').length + Array.from(document.querySelectorAll('.studio-panel:not([hidden])')).reduce((n,panel) => n + panel.querySelectorAll('.studio-row').length,0);
-      const status = document.querySelector('#filter-status');
-      if (status) status.textContent = categories[category] + ' · ' + count + (count === 1 ? ' service' : ' services');
-    }
-    filterButtons.forEach(button => button.addEventListener('click', () => {
-      filter(button.dataset.filter);
-      const next = new URL(window.location.href);
-      if (button.dataset.filter === 'all') next.searchParams.delete('category'); else next.searchParams.set('category',button.dataset.filter);
-      window.history.replaceState(null, '', next.pathname + next.search + next.hash);
-    }));
-    filter(query.get('category') || 'all');
-  }
-  if (window.location.hash === '#terms') {
-    const terms = document.getElementById('terms');
-    if (terms) { terms.open = true; terms.scrollIntoView(); }
-  }
-  const form = document.querySelector('#inquiry-form');
-  if (form) {
-    const select = document.querySelector('#service-select');
-    if (serviceIds.includes(query.get('service'))) select.value = query.get('service');
-    form.querySelector('[data-preview-submit]').disabled = false;
-    const panel = document.querySelector('#inquiry-preview-panel');
-    const preview = document.querySelector('#inquiry-text');
-    const status = document.querySelector('#copy-status');
-    form.addEventListener('submit', event => {
-      event.preventDefault();
-      if (!form.reportValidity()) return;
-      const data = new FormData(form);
-      preview.textContent = ['MAKEGOOD CO. — INQUIRY PREVIEW (NOT SENT)', '', 'Name: ' + String(data.get('name') || '').trim(), 'Email: ' + String(data.get('email') || '').trim(), 'Organization: ' + (String(data.get('organization') || '').trim() || 'Not provided'), 'Starting point: ' + select.options[select.selectedIndex].text, '', String(data.get('message') || '').trim(), '', 'Draft only. Not sent; no booking or payment.'].join('\n');
-      status.textContent = '';
-      panel.hidden = false;
-      panel.focus();
-    });
-    document.querySelector('#copy-inquiry').addEventListener('click', async () => {
-      try { await navigator.clipboard.writeText(preview.textContent); status.textContent = 'Draft copied. Nothing was sent.'; }
-      catch (_) { status.textContent = 'Select the draft text to copy it, or choose Save as text.'; }
-    });
-    document.querySelector('#save-inquiry').addEventListener('click', () => {
-      const url = URL.createObjectURL(new Blob([preview.textContent],{type:'text/plain;charset=utf-8'}));
-      const link = document.createElement('a'); link.href = url; link.download = 'MakeGood-inquiry-draft.txt';
-      document.body.appendChild(link); link.click(); link.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-      status.textContent = 'Save requested. Nothing was sent to MakeGood.';
-    });
-    document.querySelector('#edit-inquiry').addEventListener('click', () => { panel.hidden = true; form.querySelector('textarea').focus(); });
-  }
+/* Shared behavior for the hosted MakeGood review. No form information is transmitted or stored. */
+(()=>{'use strict';
+const menu=document.querySelector('.menu-toggle'),nav=document.getElementById('navigation'),header=document.getElementById('site-header'),main=document.getElementById('main');
+function closeMenu(){if(nav)nav.classList.remove('open');if(menu)menu.setAttribute('aria-expanded','false');}
+if(menu&&nav){menu.addEventListener('click',()=>{const on=menu.getAttribute('aria-expanded')!=='true';nav.classList.toggle('open',on);menu.setAttribute('aria-expanded',String(on));});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&nav.classList.contains('open')){closeMenu();menu.focus();}});nav.addEventListener('click',e=>{if(e.target.closest('a'))closeMenu();});}
+function updateHeader(){if(!header)return;const h=header.getBoundingClientRect().height;const tall=h>innerHeight*.30;header.classList.toggle('unstick',tall);document.documentElement.style.setProperty('--nav-h',tall?'0px':Math.ceil(h)+'px');}
+if(header&&'ResizeObserver'in window)new ResizeObserver(updateHeader).observe(header);window.addEventListener('resize',updateHeader);updateHeader();
+const params=new URLSearchParams(location.search);
+function filter(category){if(!['all','erg','presence','individual'].includes(category))category='all';document.querySelectorAll('[data-filter]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.filter===category)));document.querySelectorAll('.offer').forEach(o=>{o.hidden=category!=='all'&&!o.dataset.audiences.split(' ').includes(category);});document.querySelectorAll('[data-group]').forEach(g=>{const visible=[...g.querySelectorAll('.offer')].filter(x=>!x.hidden);g.hidden=!visible.length;const h=g.querySelector('h2'),intro=g.querySelector('.group-intro'),shared=g.dataset.group==='presence'&&category==='erg';h.textContent=shared?'A focused decision for your ERG program.':h.dataset.default;intro.hidden=shared;});const n=document.querySelectorAll('.offer:not([hidden])').length,names={all:'All services',erg:'ERG Studio',presence:'Leaders & Teams',individual:'Individual Coaching'},status=document.getElementById('filter-status');if(status)status.textContent=names[category]+' · '+n+(n===1?' service':' services')+' · Fees and scope on each service page.';}
+if(document.getElementById('filter-status')){filter(params.get('category')||'all');document.querySelectorAll('[data-filter]').forEach(b=>b.addEventListener('click',()=>{const url=new URL(location.href),v=b.dataset.filter;if(v==='all')url.searchParams.delete('category');else url.searchParams.set('category',v);history.replaceState(null,'',url.pathname+url.search+url.hash);filter(v);}));}
+const form=document.getElementById('inquiry-form');
+if(form){const select=document.getElementById('service-select'),service=params.get('service');if(service&&[...select.options].some(o=>o.value===service))select.value=service;form.addEventListener('submit',e=>{e.preventDefault();if(!form.reportValidity())return;const d=new FormData(form);document.getElementById('inquiry-text').textContent=['DRAFT — NOT SENT','Name: '+d.get('name'),'Email: '+d.get('email'),'Organization: '+(d.get('organization')||'Not provided'),'Support: '+select.options[select.selectedIndex].text,'',String(d.get('message')).trim()].join('\n');const result=document.getElementById('inquiry-result');result.hidden=false;result.focus();});document.getElementById('edit-inquiry').addEventListener('click',()=>{document.getElementById('inquiry-result').hidden=true;form.querySelector('textarea').focus();});form.querySelectorAll('[disabled]').forEach(el=>el.disabled=false);}
+function revealAnchor(){let id='';try{id=decodeURIComponent(location.hash.slice(1));}catch(_){return;}const el=document.getElementById(id);if(!el)return;if(el.tagName==='DETAILS')el.open=true;requestAnimationFrame(()=>el.scrollIntoView({block:'start'}));}
+window.addEventListener('hashchange',revealAnchor);revealAnchor();
+const skip=document.querySelector('.skip');if(skip)skip.addEventListener('click',e=>{e.preventDefault();main.focus();main.scrollIntoView();});
 })();
-
-/* Open directly linked FAQ answers without changing navigation semantics. */
-function revealLinkedAnswer(){const id=decodeURIComponent(window.location.hash.slice(1));if(!id)return;const el=document.getElementById(id);if(el&&el.tagName==='DETAILS'){el.open=true;el.scrollIntoView();}}
-window.addEventListener('load',revealLinkedAnswer);window.addEventListener('hashchange',revealLinkedAnswer);
