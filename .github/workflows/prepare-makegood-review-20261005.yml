@@ -17,7 +17,7 @@ jobs:
       - name: Unpack checksum-verified approved source
         run: |
           python - <<'PY'
-          import base64, hashlib, json, lzma
+          import base64, hashlib, json, lzma, re
           from pathlib import Path, PurePosixPath
           folder=Path('.github/review-package-20261005')
           encoded=''.join((folder/f'{i:02}.b64').read_text().strip() for i in range(1,7))
@@ -33,6 +33,7 @@ jobs:
               assert isinstance(content,str)
               if relative.endswith('.html'):
                   content=content.replace('aria-label="MakeGood Co. home" class="brand"','aria-label="MakeGood Co. People. Culture. Possibilities. Home" class="brand"')
+                  content=re.sub(r'aria-label="Explore ([^"]+): service and fees"',r'aria-label="Explore service &amp; fees: \1"',content)
               target=Path(relative);target.parent.mkdir(parents=True,exist_ok=True);target.write_text(content,encoding='utf-8')
           print('Unpacked approved source:',len(files),'files')
           PY
