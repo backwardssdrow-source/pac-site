@@ -31,6 +31,8 @@ jobs:
               assert not p.is_absolute() and '..' not in p.parts,relative
               assert relative.startswith('makegood/') or relative in scripts,relative
               assert isinstance(content,str)
+              if relative.endswith('.html'):
+                  content=content.replace('aria-label="MakeGood Co. home" class="brand"','aria-label="MakeGood Co. People. Culture. Possibilities. Home" class="brand"')
               target=Path(relative);target.parent.mkdir(parents=True,exist_ok=True);target.write_text(content,encoding='utf-8')
           print('Unpacked approved source:',len(files),'files')
           PY
