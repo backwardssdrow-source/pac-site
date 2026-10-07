@@ -127,3 +127,22 @@ body[data-page="faq.html"] .faq-list{padding:12px 28px 18px;border:1px solid var
 
 /* Static-page integration; the reviewed design and text are retained. */
 body>main{background:var(--page-bg)}
+
+
+/* Responsive typography and hero layout, 7 October 2026.
+   Keep 18px reading text and the desktop design; improve small-screen hierarchy. */
+@media screen{
+  .footer-links a{font-size:16px;min-height:44px}
+  .hero-copy,.brand-stage{min-width:0}
+}
+@media screen and (max-width:900px){
+  .hero{grid-template-columns:minmax(0,1fr);gap:28px}
+  .hero h1{font-size:clamp(36px,4.5vw,40px);max-width:24ch}
+  .hero .brand-stage{width:100%;max-width:360px;min-height:0;justify-self:center;padding:16px 24px}
+  .hero .brand-stage img{max-width:280px}
+}
+@media screen and (max-width:650px){
+  .hero h1{font-size:clamp(35px,9.2vw,36px);max-width:18ch}
+  .hero .brand-stage{max-width:320px;padding:10px 25px 0}
+  .hero .brand-stage img{max-width:240px}
+}
