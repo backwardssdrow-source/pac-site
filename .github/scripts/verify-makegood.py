@@ -33,7 +33,7 @@ if not LOCAL:
    if fetch(path)==expected:return path
    time.sleep(8)
   raise AssertionError('Live bytes differ: '+path)
- with ThreadPoolExecutor(max_workers=6) as pool:R['source_files_matched']=list(pool.map(match,M['pages']+['site.css','site.js','makegood-sunrise.svg']))
+ with ThreadPoolExecutor(max_workers=6) as pool:R['source_files_matched']=list(pool.map(match,M['pages']+['site.css','site.js','makegood-sunrise.svg','lt-founder.avif','travis-founder.avif']))
 with sync_playwright() as pw:
  opts={'headless':True}
  if os.environ.get('CHROMIUM_PATH'):opts['executable_path']=os.environ['CHROMIUM_PATH']
@@ -51,12 +51,22 @@ with sync_playwright() as pw:
    assert page.locator('meta[name="robots"]').get_attribute('content')=='noindex,nofollow'
    assert page.locator('.footer-links a').count()==6,route
    assert page.locator('.review-bar').count()==0
+   # Scroll lazy-loaded portraits into view before checking image delivery.
+   for image in page.locator('img').all():
+    image.scroll_into_view_if_needed();image.evaluate('(x)=>x.decode()')
+   page.evaluate('window.scrollTo(0,0)')
    assert page.locator('img').evaluate_all('(xs)=>xs.every(x=>x.complete&&x.naturalWidth>0)'),route
    dim=page.evaluate('({width:innerWidth,scroll:document.documentElement.scrollWidth})');assert dim['scroll']<=w+1,(route,w,dim)
    got=page.locator('main').evaluate('(x)=>getComputedStyle(x).backgroundColor')
    h=M['expected'][route]['background_hex'].lstrip('#');want='rgb('+', '.join(str(int(h[i:i+2],16)) for i in (0,2,4))+')';assert got==want,(route,got,want)
-   controls=page.locator('.footer-links a').evaluate_all('(xs)=>xs.map(x=>({weight:getComputedStyle(x).fontWeight,h:x.getBoundingClientRect().height,w:x.getBoundingClientRect().width}))')
-   assert all(x['weight']=='500' and x['h']>=24 and x['w']>=24 for x in controls)
+   controls=page.locator('.footer-links a').evaluate_all('(xs)=>xs.map(x=>({weight:getComputedStyle(x).fontWeight,size:getComputedStyle(x).fontSize,h:x.getBoundingClientRect().height,w:x.getBoundingClientRect().width}))')
+   assert all(x['weight']=='500' and x['size']=='16px' and x['h']>=44 and x['w']>=24 for x in controls),(route,w,controls)
+   assert page.locator('body').evaluate('(x)=>getComputedStyle(x).fontSize')=='18px',route
+   if route=='index.html' and w<=650:
+    size=page.locator('.hero h1').evaluate('(x)=>parseFloat(getComputedStyle(x).fontSize)');assert 35<=size<=36,(w,size)
+   if route=='about.html':
+    portraits=page.locator('.founder-portrait').evaluate_all('(xs)=>xs.map(x=>({w:x.getBoundingClientRect().width,h:x.getBoundingClientRect().height}))')
+    assert len(portraits)==2 and portraits[0]==portraits[1],portraits
    violations=[];ran=False
    if axe.exists() and w in [1440,390]:
     page.add_script_tag(path=str(axe));result=page.evaluate("async()=>await axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21a','wcag21aa','wcag22aa']}})")
@@ -69,11 +79,11 @@ with sync_playwright() as pw:
  assert page.locator('[data-home-audience]').evaluate_all('(xs)=>xs.map(x=>x.dataset.homeAudience)')==['erg','presence','individual']
  colors=page.locator('.home-paths .path-card').evaluate_all('(xs)=>xs.map(x=>getComputedStyle(x).borderTopColor)')
  assert colors==['rgb(240, 68, 28)','rgb(242, 166, 162)','rgb(244, 172, 12)'],colors
- assert '[XX] years' in page.locator('#experience').inner_text()
+ assert page.locator('.experience-years').inner_text().strip()=='39 years'
  assert not any(x in page.locator('main').inner_text() for x in ['LT Peterson','Uber','LT and Travis'])
  assert page.locator('.brand-stage').evaluate('(x)=>getComputedStyle(x).backgroundColor')=='rgb(250, 247, 242)'
  assert page.locator('.site-header').evaluate('(x)=>getComputedStyle(x).position')=='sticky'
- R['checks'].append('Approved homepage copy, placeholders, cream logo panel, sticky header and orange/pink/gold order')
+ R['checks'].append('Approved homepage copy, 39-year statement, cream logo panel, sticky header and orange/pink/gold order')
  page.goto(BASE+'services.html?category=erg')
  assert page.locator('[data-filter="erg"]').get_attribute('aria-pressed')=='true'
  assert page.locator('.offer:not([hidden])').count()==5
@@ -99,11 +109,18 @@ with sync_playwright() as pw:
  page.locator('[data-preview-submit]').click();assert page.locator('#inquiry-result').is_visible();assert 'NOT SENT' in page.locator('#inquiry-text').inner_text();assert not sent
  R['checks'].append('Service selection and non-sending contact draft')
  page.goto(BASE+'faq.html#terms');assert page.locator('#terms').get_attribute('open') is not None
- page.goto(BASE+'about.html');assert 'Bio coming soon.' in page.locator('main').inner_text()
+ page.goto(BASE+'about.html')
+ assert page.locator('.founder-portrait img').evaluate_all('(xs)=>xs.map(x=>x.getAttribute("src"))')==['lt-founder.avif','travis-founder.avif']
+ assert page.locator('.founder-portrait-placeholder').count()==0
+ assert '39 years of combined professional experience' in page.locator('#founders').inner_text()
  page.set_viewport_size({'width':390,'height':844});page.goto(BASE+'index.html');page.locator('.menu-toggle').click();assert page.locator('#navigation').is_visible();page.keyboard.press('Escape');assert page.locator('.menu-toggle').get_attribute('aria-expanded')=='false'
+ # Confirm mobile menu links load independent documents rather than same-page sections.
+ page.locator('.menu-toggle').click();page.locator('#navigation a[href="about.html"]').click();page.wait_for_url('**/about.html');assert page.title()==M['expected']['about.html']['title']
+ page.locator('.menu-toggle').click();page.locator('#navigation a[href="index.html"]').click();page.wait_for_url('**/index.html');assert page.title()==M['expected']['index.html']['title']
+ R['checks'].append('Mobile Home/About/Home navigation loads separate pages')
  page.goto(BASE+'services/senior-presence-advisory.html')
  y=[page.locator(s).bounding_box()['y'] for s in ['.detail-intro-block','.detail-summary','.detail-body']];assert y==sorted(y)
- R['checks'].append('FAQ anchors, Travis placeholder, mobile menu/Escape and mobile base-price order')
+ R['checks'].append('FAQ anchors, both founder portraits, mobile menu/Escape and mobile base-price order')
  for route in ['index.html','services.html','approach.html','services/senior-presence-advisory.html']:
   page.goto(BASE+route);page.add_style_tag(content='html{font-size:200%!important}');assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'),route
   page.goto(BASE+route);page.add_style_tag(content='*{line-height:1.5!important;letter-spacing:.12em!important;word-spacing:.16em!important}p{margin-bottom:2em!important}');assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'),route
