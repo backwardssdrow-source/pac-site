@@ -1,8 +1,9 @@
-"""Check the published MakeGood pages, including a genuinely short mobile Home."""
+"""Check the published separate-page site and compact mobile menu."""
 from pathlib import Path
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from concurrent.futures import ThreadPoolExecutor
 from urllib.parse import urljoin, urlsplit
+from html.parser import HTMLParser
 import os, json, time, urllib.request, threading, functools
 from playwright.sync_api import sync_playwright
 
@@ -53,18 +54,26 @@ def wait_for_release():
     with ThreadPoolExecutor(max_workers=6) as pool:
         R['source_files_matched'] = list(pool.map(match, paths))
 
+def local_fonts(page):
+    if LOCAL:
+        page.route('https://fonts.googleapis.com/**', lambda route: route.fulfill(status=200, content_type='text/css', body=''))
+
 def check_navigation(browser, engine, javascript):
     context = browser.new_context(viewport={'width': 390, 'height': 844}, java_script_enabled=javascript)
     page = context.new_page()
-    if LOCAL:
-        page.route('https://fonts.googleapis.com/**', lambda route: route.fulfill(status=200, content_type='text/css', body=''))
+    local_fonts(page)
     page.goto(BASE + 'index.html?release=' + REV)
     for target in MAIN_PAGES[1:] + MAIN_PAGES[:1]:
+        if javascript:
+            assert page.locator('.menu-toggle').is_visible()
+            assert not page.locator('#navigation').is_visible()
+            page.locator('.menu-toggle').click()
+            assert page.locator('.menu-toggle').get_attribute('aria-expanded') == 'true'
+        else:
+            assert not page.locator('.menu-toggle').is_visible()
         assert page.locator('#navigation').is_visible()
-        assert not page.locator('.menu-toggle').is_visible()
-        link = page.locator('#navigation a').filter(has_text={'index.html':'Home','services.html':'Services','approach.html':'Our approach','about.html':'About','faq.html':'FAQs','contact.html':'Contact'}[target])
         with page.expect_navigation(wait_until='load') as navigation:
-            link.click()
+            page.locator('#navigation a[href="' + target + '"]').click()
         response = navigation.value
         assert response is not None and response.status == 200, target
         assert response.request.resource_type == 'document', target
@@ -73,6 +82,17 @@ def check_navigation(browser, engine, javascript):
         assert page.locator('body').get_attribute('data-page') == target
         assert page.locator('#navigation a[aria-current="page"]').count() == 1
         R['navigation'].append({'browser': engine, 'javascript': javascript, 'target': target, 'document_response': response.status})
+    if javascript:
+        page.locator('.menu-toggle').click()
+        page.screenshot(path=str(REPORT / (engine + '-390-menu-open.png')))
+        page.keyboard.press('Escape')
+        assert not page.locator('#navigation').is_visible()
+        assert page.locator('.menu-toggle').get_attribute('aria-expanded') == 'false'
+        page.locator('.menu-toggle').click()
+        page.locator('.home-proof').click()
+        assert not page.locator('#navigation').is_visible()
+        page.go_back()
+        assert not page.locator('#navigation').is_visible()
     context.close()
 
 def verify_browser(pw, engine):
@@ -83,8 +103,7 @@ def verify_browser(pw, engine):
     page = browser.new_page()
     errors = []
     page.on('pageerror', lambda error: errors.append(str(error)))
-    if LOCAL:
-        page.route('https://fonts.googleapis.com/**', lambda route: route.fulfill(status=200, content_type='text/css', body=''))
+    local_fonts(page)
     axe = ROOT / 'node_modules/axe-core/axe.min.js'
     widths = [1440, 1024, 900, 768, 430, 390, 375, 320] if engine == 'chromium' else [390, 320]
     for width in widths:
@@ -95,8 +114,7 @@ def verify_browser(pw, engine):
             page.evaluate('document.fonts.ready')
             assert page.locator('h1').count() == 1, route
             assert page.title() == M['expected'][route]['title'], route
-            if route in MAIN_PAGES:
-                assert page.locator('meta[name="site-revision"]').get_attribute('content') == REV, route
+            assert page.locator('meta[name="site-revision"]').get_attribute('content') == REV, route
             assert page.locator('meta[name="robots"]').get_attribute('content') == 'noindex,nofollow', route
             assert page.locator('.footer-links a').count() == 6, route
             for image in page.locator('img').all():
@@ -111,19 +129,24 @@ def verify_browser(pw, engine):
             h = M['expected'][route]['background_hex'].lstrip('#')
             wanted = 'rgb(' + ', '.join(str(int(h[i:i+2],16)) for i in (0,2,4)) + ')'
             assert page.locator('main').evaluate('(el)=>getComputedStyle(el).backgroundColor') == wanted, route
-            controls = page.locator('.footer-links a').evaluate_all('(xs)=>xs.map(x=>({size:getComputedStyle(x).fontSize,h:x.getBoundingClientRect().height}))')
+            controls = page.locator('.footer-links a:visible').evaluate_all('(xs)=>xs.map(x=>({size:getComputedStyle(x).fontSize,h:x.getBoundingClientRect().height}))')
             assert all(x['size']=='16px' and x['h']>=44 for x in controls), (route, controls)
             if width <= 900:
-                assert page.locator('#navigation').is_visible(), route
-                for link in page.locator('#navigation a').all():
-                    box = link.bounding_box()
-                    assert box and box['height'] >= 44 and box['y'] >= 0 and box['y']+box['height'] <= 250, (route, box)
+                assert not page.locator('#navigation').is_visible(), route
+                assert page.locator('.menu-toggle').is_visible(), route
+                assert page.locator('.site-header').bounding_box()['height'] <= 84, route
+                assert page.locator('.menu-toggle').bounding_box()['height'] >= 44, route
             if route == 'index.html':
                 assert page.locator('main > section').count() == 1
                 assert page.locator('.home-paths,.home-experience,.home-approach,.context-band,main .closing').count() == 0
                 assert '39 years of combined professional experience' in page.locator('.home-proof').inner_text()
+                assert page.locator('.home-proof a').count() == 0
+                assert page.locator('.hero .eyebrow').bounding_box()['y'] >= page.locator('.site-header').bounding_box()['height']
+                if width <= 900:
+                    assert page.locator('.footer-links a:visible').count() == 1
+                    assert page.locator('.footer-links a:visible').get_attribute('href') == 'contact.html'
                 if width <= 650:
-                    assert dim['height'] <= (1300 if width <= 360 else 1100), (engine, width, dim)
+                    assert dim['height'] <= (1150 if width <= 360 else 1000), (engine, width, dim)
                     size = page.locator('.hero h1').evaluate('(el)=>parseFloat(getComputedStyle(el).fontSize)')
                     assert 35 <= size <= 36, size
             if route == 'about.html':
@@ -169,8 +192,7 @@ def verify_browser(pw, engine):
         assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'), route
     context = browser.new_context(java_script_enabled=False)
     nojs = context.new_page()
-    if LOCAL:
-        nojs.route('https://fonts.googleapis.com/**', lambda route: route.fulfill(status=200, content_type='text/css', body=''))
+    local_fonts(nojs)
     nojs.goto(BASE+'contact.html')
     assert nojs.locator('[data-preview-submit]').is_disabled()
     assert nojs.locator('input[name=email]').is_disabled()
@@ -182,7 +204,6 @@ try:
     if not LOCAL:
         wait_for_release()
     for route in M['pages']:
-        from html.parser import HTMLParser
         class Links(HTMLParser):
             def handle_starttag(self, tag, attrs):
                 attrs = dict(attrs)
@@ -198,7 +219,7 @@ try:
         verify_browser(pw, 'chromium')
         if os.environ.get('MAKEGOOD_WEBKIT') == '1':
             verify_browser(pw, 'webkit')
-    R['checks'] = ['Short Home without stacked full-page sections', 'All six mobile page links visible and loading separate documents with and without JavaScript', 'Experience preserved on About; context preserved on Our approach', 'Both founder portraits unchanged and loading', 'Service filters, contact draft, FAQ anchors and legacy experience link', 'Every internal path and anchor resolves', 'No horizontal overflow at tested sizes; custom text spacing checked']
+    R['checks'] = ['Short Home with compact header, primary service button and simple mobile footer', 'All six mobile menu destinations load separate documents; no-JavaScript fallback remains usable', 'Menu closes on Escape, outside click and back navigation', 'Experience preserved on About; context preserved on Our approach', 'Both founder portraits unchanged and loading', 'Service filters, contact draft, FAQ anchors and legacy experience link', 'Every internal path and anchor resolves', 'No horizontal overflow at tested sizes; custom text spacing checked']
     R['status'] = 'passed'
     print('PASSED', REV, flush=True)
 except Exception as exc:

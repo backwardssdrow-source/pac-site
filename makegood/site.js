@@ -1,8 +1,17 @@
 /* Shared behavior for the hosted MakeGood review. No form information is transmitted or stored. */
 (()=>{'use strict';
 const menu=document.querySelector('.menu-toggle'),nav=document.getElementById('navigation'),header=document.getElementById('site-header'),main=document.getElementById('main');
-function closeMenu(){if(nav)nav.classList.remove('open');if(menu)menu.setAttribute('aria-expanded','false');}
-if(menu&&nav){menu.addEventListener('click',()=>{const on=menu.getAttribute('aria-expanded')!=='true';nav.classList.toggle('open',on);menu.setAttribute('aria-expanded',String(on));});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&nav.classList.contains('open')){closeMenu();menu.focus();}});nav.addEventListener('click',e=>{if(e.target.closest('a'))closeMenu();});}
+function closeMenu(){if(nav)nav.classList.remove('open');if(menu){menu.setAttribute('aria-expanded','false');menu.textContent='Menu';}}
+if(menu&&nav){
+ menu.addEventListener('click',()=>{const on=menu.getAttribute('aria-expanded')!=='true';nav.classList.toggle('open',on);menu.setAttribute('aria-expanded',String(on));menu.textContent=on?'Close':'Menu';});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&nav.classList.contains('open')){closeMenu();menu.focus();}});
+ document.addEventListener('pointerdown',e=>{if(header&&!header.contains(e.target))closeMenu();});
+ nav.addEventListener('click',e=>{if(e.target.closest('a'))closeMenu();});
+ nav.addEventListener('focusout',e=>{if(header&&e.relatedTarget&&!header.contains(e.relatedTarget))closeMenu();});
+ window.addEventListener('resize',()=>{if(innerWidth>900)closeMenu();});
+ window.addEventListener('pageshow',closeMenu);
+ document.documentElement.classList.add('menu-ready');
+}
 function updateHeader(){if(!header)return;const h=header.getBoundingClientRect().height;const tall=h>innerHeight*.30;header.classList.toggle('unstick',tall);document.documentElement.style.setProperty('--nav-h',tall?'0px':Math.ceil(h)+'px');}
 if(header&&'ResizeObserver'in window)new ResizeObserver(updateHeader).observe(header);window.addEventListener('resize',updateHeader);updateHeader();
 const params=new URLSearchParams(location.search);

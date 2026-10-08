@@ -1,10 +1,9 @@
-/* Multi-page layout: Home is a short introduction; full content lives on its own pages. */
+/* Separate documents remain unchanged. Compact mobile navigation is a disclosure, not a single-page router. */
 @import url("site-base.css?v=20261007-separate-pages-2");
 
 body[data-page="index.html"]{display:flex;flex-direction:column;min-height:100svh}
 body[data-page="index.html"]>main{flex:1}
-.home-proof{font-size:16px;line-height:1.6;margin:24px 0 0;padding-top:16px;border-top:1px solid var(--olive);max-width:48ch}
-.home-proof a{display:inline-block;padding-block:4px}
+.home-proof{font-size:16px;line-height:1.6;margin:24px 0 0;max-width:48ch}
 .home-footer{padding-block:18px}
 .home-footer .footer-main{display:block}
 .home-footer .footer-links{display:flex;flex-wrap:wrap;gap:8px 16px}
@@ -12,29 +11,33 @@ body[data-page="index.html"]>main{flex:1}
 .home-footer .footer-bottom{margin-top:10px;padding-top:12px}
 
 @media screen and (max-width:900px){
-  /* Real page links are visible without JavaScript or opening a hidden menu. */
-  .site-header .nav-wrap{display:flex;flex-wrap:wrap;gap:8px;min-height:0;padding-block:8px}
-  .site-header .brand img{width:62px}
-  .site-header .brandtext{display:block;font-size:14px;line-height:1.35;padding-left:14px}
+  /* Navigation remains usable in the document flow if JavaScript is unavailable. */
+  html:not(.menu-ready) .site-header{position:relative}
+  .site-header .nav-wrap{display:flex;flex-wrap:wrap;align-items:center;gap:12px;min-height:80px;padding-block:10px}
+  .site-header .brand img{width:68px}
+  .site-header .brandtext{display:none}
   .site-header .menu-toggle{display:none}
-  .site-header .navlinks,.site-header.unstick .navlinks{display:grid;position:static;grid-template-columns:repeat(3,minmax(0,1fr));flex-basis:100%;width:100%;gap:4px;max-height:none;overflow:visible;padding:0;border:0;background:transparent;font-size:16px;line-height:1.25}
-  .site-header .navlinks>a{display:flex;justify-content:center;align-items:center;text-align:center;min-width:0;min-height:44px;padding:6px 4px;border:1px solid transparent;border-radius:6px}
-  .site-header .navlinks>a[aria-current="page"]{border-color:var(--olive);background:var(--cream);text-underline-offset:3px}
+  .site-header .navlinks,.site-header.unstick .navlinks{display:grid;position:static;grid-template-columns:repeat(2,minmax(0,1fr));flex-basis:100%;width:100%;gap:4px;max-height:none;overflow:visible;padding:8px 0;border:0;background:transparent;font-size:16px;line-height:1.5}
+  .site-header .navlinks>a{display:flex;justify-content:flex-start;align-items:center;text-align:left;min-width:0;min-height:44px;padding:10px 12px;border:1px solid transparent;border-radius:6px}
+  .site-header .navlinks>a[aria-current="page"]:not(.button){background:var(--cream);text-underline-offset:5px}
   .site-header .navlinks>a.primary{border-color:var(--charcoal)}
-  body[data-page="index.html"] .hero{padding-block:24px 28px;gap:0}
+  .menu-ready .site-header .menu-toggle{display:inline-flex;align-items:center;justify-content:center;margin-left:auto;min-height:44px;min-width:76px;padding:8px 14px;background:var(--cream);border-color:var(--olive)}
+  .menu-ready .site-header .navlinks{display:none;position:absolute;top:100%;left:0;right:0;flex-basis:auto;max-height:calc(100dvh - var(--nav-h) - 16px);overflow:auto;padding:12px 20px 20px;border-bottom:1px solid var(--olive);background:var(--manila-wash)}
+  .menu-ready .site-header .navlinks.open{display:flex;flex-direction:column;align-items:stretch;gap:4px}
+  body[data-page="index.html"] .hero{padding-block:32px 36px;gap:0}
   body[data-page="index.html"] .hero .brand-stage{display:none}
-  body[data-page="index.html"] .hero .lede{margin-bottom:20px}
-  .home-footer .footer-links{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:100%;gap:4px 8px}
-  .home-footer .footer-links a{font-size:16px;line-height:1.25;padding:4px;justify-content:center;text-align:center;min-width:0}
-  .home-footer .footer-bottom{align-items:center}
+  body[data-page="index.html"] .hero .lede{margin-bottom:24px}
+  .home-footer{padding-block:12px;background:var(--manila-wash)}
+  .home-footer>.wrap{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .home-footer .footer-main{order:2}
+  .home-footer .footer-links{display:block;width:auto}
+  .home-footer .footer-links a:not([href="contact.html"]){display:none}
+  .home-footer .footer-links a{font-size:16px;line-height:1.5;padding:8px 0;min-height:44px}
+  .home-footer .footer-bottom{order:1;flex-direction:row;align-items:center;margin:0;padding:0;border:0}
 }
 @media screen and (max-width:650px){
   body[data-page="index.html"] .hero h1{margin-bottom:20px}
-  body[data-page="index.html"] .actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  body[data-page="index.html"] .actions .button{padding:9px 8px}
-}
-@media screen and (max-width:360px){
-  .site-header .brand img{width:56px}
-  .site-header .navlinks{font-size:15px}
-  body[data-page="index.html"] .actions{grid-template-columns:1fr}
+  body[data-page="index.html"] .actions{display:grid;grid-template-columns:1fr;gap:8px}
+  body[data-page="index.html"] .actions .button.primary{min-height:48px;padding:12px 16px}
+  body[data-page="index.html"] .actions .button:not(.primary){justify-self:start;justify-content:flex-start;min-height:44px;padding:4px 0;border:0;border-radius:0;background:transparent;text-decoration:underline;text-underline-offset:4px}
 }
