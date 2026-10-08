@@ -1,0 +1,118 @@
+name: Verify service guide spacing
+on:
+  push:
+    branches: [gh-pages]
+    paths: ['makegood/services.html', '.github/workflows/verify-service-guide-spacing.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  service-guide:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install browser checks
+        run: |
+          python -m pip install playwright
+          python -m playwright install --with-deps chromium webkit
+      - name: Verify published chooser and service links
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from urllib.request import urlopen
+          from urllib.parse import urlsplit
+          import json, time
+          from playwright.sync_api import sync_playwright
+
+          base = 'https://backwardssdrow-source.github.io/pac-site/makegood/'
+          rev = '20261008-spacing-1'
+          output = Path('service-guide-verification')
+          output.mkdir(exist_ok=True)
+          report = {'revision': rev, 'sizes': [], 'navigation': [], 'errors': []}
+          expected = Path('makegood/services.html').read_bytes()
+          targets = ['services/erg-portfolio-diagnostic.html', 'services/erg-operating-model-build.html', 'services/fractional-erg-office.html', 'services/coaching.html']
+          try:
+              deadline = time.monotonic() + 300
+              while True:
+                  try:
+                      with urlopen(base + 'services.html?spacing=' + rev, timeout=20) as r:
+                          if r.read() == expected:
+                              break
+                  except Exception as exc:
+                      print('Waiting for publication:', exc, flush=True)
+                  if time.monotonic() > deadline:
+                      raise TimeoutError('Updated service chooser has not reached the live site')
+                  time.sleep(8)
+              report['published_source_matched'] = True
+              with sync_playwright() as pw:
+                  for engine in ['chromium', 'webkit']:
+                      browser = getattr(pw, engine).launch()
+                      page = browser.new_page()
+                      page.on('pageerror', lambda error: report['errors'].append(str(error)))
+                      widths = [320, 375, 390, 430, 768, 900, 1024, 1440] if engine == 'chromium' else [320, 390]
+                      for width in widths:
+                          page.set_viewport_size({'width': width, 'height': 844 if width <= 900 else 1000})
+                          response = page.goto(base + 'services.html?spacing=' + rev, wait_until='load')
+                          assert response.status == 200
+                          page.evaluate('document.fonts.ready')
+                          assert page.locator('.service-guide-option').count() == 4
+                          assert page.locator('.service-guide-option p a').count() == 0
+                          assert page.locator('.offer').count() == 9
+                          assert page.locator('meta[name="service-guide-revision"]').get_attribute('content') == rev
+                          assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 1'), (engine, width)
+                          columns = page.locator('.service-guide-grid').evaluate('(el)=>getComputedStyle(el).gridTemplateColumns.split(" ").length')
+                          assert columns == (1 if width <= 900 else 2)
+                          for card in page.locator('.service-guide-option').all():
+                              assert card.locator('p').evaluate('(el)=>getComputedStyle(el).fontSize') == '18px'
+                              p, a = card.locator('p').bounding_box(), card.locator('a').bounding_box()
+                              assert a['height'] >= 44
+                              assert a['y'] >= p['y'] + p['height'] + 11, (engine, width, p, a)
+                          report['sizes'].append({'browser': engine, 'width': width, 'columns': columns, 'overflow': False, 'reading_text_px': 18, 'minimum_link_height_px': 44})
+                          if width in [390, 1440]:
+                              page.locator('#find-your-fit').screenshot(path=str(output / f'{engine}-{width}-guide.png'))
+                              page.evaluate('scrollTo(0,document.getElementById("find-your-fit").getBoundingClientRect().top + scrollY - 100)')
+                              page.screenshot(path=str(output / f'{engine}-{width}-viewport.png'))
+                      page.set_viewport_size({'width': 390, 'height': 844})
+                      for i, target in enumerate(targets):
+                          page.goto(base + 'services.html?spacing=' + rev)
+                          with page.expect_navigation(wait_until='load') as navigation:
+                              page.locator('.service-guide-option a').nth(i).click()
+                          assert navigation.value.status == 200
+                          assert navigation.value.request.resource_type == 'document'
+                          assert urlsplit(page.url).path.endswith('/' + target)
+                          report['navigation'].append({'browser': engine, 'target': target, 'status': 200})
+                      page.goto(base + 'services.html?spacing=' + rev)
+                      for category, count in [('erg', 5), ('presence', 4), ('individual', 1), ('all', 9)]:
+                          page.locator(f'[data-filter="{category}"]').click()
+                          assert page.locator('.offer:not([hidden])').count() == count
+                      for width in [320, 390]:
+                          page.set_viewport_size({'width': width, 'height': 844})
+                          page.goto(base + 'services.html?spacing=' + rev)
+                          page.add_style_tag(content='*{line-height:1.5!important;letter-spacing:.12em!important;word-spacing:.16em!important}p{margin-bottom:2em!important}')
+                          assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 1'), ('custom text spacing', engine, width)
+                      context = browser.new_context(java_script_enabled=False, viewport={'width': 390, 'height': 844})
+                      nojs = context.new_page()
+                      nojs.goto(base + 'services.html?spacing=' + rev)
+                      nojs.locator('.service-guide-option a').first.click()
+                      assert urlsplit(nojs.url).path.endswith('/' + targets[0])
+                      context.close()
+                      browser.close()
+              assert not report['errors'], report['errors']
+              report['status'] = 'passed'
+              report['filters_and_no_javascript_links'] = 'passed'
+              print('PASSED:', rev, flush=True)
+          except Exception as exc:
+              report['status'] = 'failed'
+              report['error'] = repr(exc)
+              raise
+          finally:
+              (output / 'report.json').write_text(json.dumps(report, indent=2))
+          PY
+      - name: Save screenshots and check results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: makegood-service-guide-spacing
+          path: service-guide-verification/
+          retention-days: 7
