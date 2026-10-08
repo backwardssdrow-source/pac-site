@@ -1,5 +1,5 @@
 {
-  "revision": "20261007-home-editorial-4",
+  "revision": "20261007-home-context-5",
   "review_only": true,
   "search_indexing": false,
   "inquiry_sends": false,
@@ -31,7 +31,7 @@
       "background_hex": "#FAF1E0",
       "color": "manila",
       "audience": "erg",
-      "revision": "20261007-home-editorial-4"
+      "revision": "20261007-home-context-5"
     },
     "services.html": {
       "title": "Services | MakeGood Co.",

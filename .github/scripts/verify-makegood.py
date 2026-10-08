@@ -1,4 +1,4 @@
-"""Check the published separate-page site and compact mobile menu."""
+"""Verify the published multi-page site and approved three-section homepage."""
 from pathlib import Path
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from concurrent.futures import ThreadPoolExecutor
@@ -15,7 +15,8 @@ LOCAL = os.environ.get('MAKEGOOD_LOCAL') == '1'
 REPORT = ROOT / os.environ.get('MAKEGOOD_REPORT', 'makegood-verification')
 REPORT.mkdir(exist_ok=True)
 MAIN_PAGES = ['index.html', 'services.html', 'approach.html', 'about.html', 'faq.html', 'contact.html']
-R = {'revision': REV, 'pages': [], 'navigation': [], 'checks': [], 'source_files_matched': []}
+SERVICE_PATHS = ['services.html?category=erg', 'services.html?category=presence', 'services/coaching.html']
+R = {'revision': REV, 'pages': [], 'navigation': [], 'home': [], 'checks': [], 'source_files_matched': []}
 server = None
 if LOCAL:
     class Quiet(SimpleHTTPRequestHandler):
@@ -58,6 +59,37 @@ def local_fonts(page):
     if LOCAL:
         page.route('https://fonts.googleapis.com/**', lambda route: route.fulfill(status=200, content_type='text/css', body=''))
 
+def check_home(page, engine, width, dimensions):
+    assert page.locator('main > section').count() == 3
+    assert page.locator('.home-paths,.home-experience,.home-approach,.context-band,main .closing,.home-proof').count() == 0
+    text = page.locator('main').inner_text()
+    assert '39 years' not in text and 'combined professional experience' not in text
+    assert 'consulting and coaching for organizations, leaders, and individuals' in page.locator('.hero .lede').inner_text()
+    assert page.locator('.home-service').count() == 3
+    assert page.locator('.home-service a').evaluate_all('(xs)=>xs.map(x=>x.getAttribute("href"))') == SERVICE_PATHS
+    assert page.locator('.home-service').evaluate_all('(xs)=>xs.map(x=>x.dataset.homeAudience)') == ['erg','presence','individual']
+    colors = page.locator('.home-service').evaluate_all('(xs)=>xs.map(x=>getComputedStyle(x).borderTopColor)')
+    assert colors == ['rgb(240, 68, 28)', 'rgb(242, 166, 162)', 'rgb(244, 172, 12)']
+    assert page.locator('.home-portraits img').evaluate_all('(xs)=>xs.map(x=>x.getAttribute("src"))') == ['lt-founder.avif','travis-founder.avif']
+    sizes = page.locator('.home-portraits img').evaluate_all('(xs)=>xs.map(x=>({w:x.getBoundingClientRect().width,h:x.getBoundingClientRect().height}))')
+    assert sizes[0] == sizes[1] and sizes[0]['w'] <= 104
+    assert page.locator('.home-people .home-founder-link[href="about.html#founders"]').count() == 1
+    assert page.locator('.hero .home-founder-link').count() == 0
+    assert page.locator('.actions .button.primary[href="services.html"]').count() == 1
+    assert page.locator('.home-invitation a[href="contact.html"]').count() == 1
+    assert page.locator('.hero .eyebrow').bounding_box()['y'] >= page.locator('.site-header').bounding_box()['height']
+    if width <= 900:
+        assert page.locator('.footer-links a:visible').count() == 1
+        assert page.locator('.footer-links a:visible').get_attribute('href') == 'contact.html'
+    if width <= 650:
+        # Enough context for a decision, not the former full site stacked on Home.
+        assert dimensions['height'] <= (2900 if width <= 360 else 2650), (engine, width, dimensions)
+        size = page.locator('.hero h1').evaluate('(el)=>parseFloat(getComputedStyle(el).fontSize)')
+        assert 35 <= size <= 36, size
+        button = page.locator('.hero .button.primary').bounding_box()
+        assert button['y'] + button['height'] <= 844, (width, button)
+    R['home'].append({'browser':engine,'width':width,'height':dimensions['height'],'sections':3,'service_paths':3,'founder_photos':2})
+
 def check_navigation(browser, engine, javascript):
     context = browser.new_context(viewport={'width': 390, 'height': 844}, java_script_enabled=javascript)
     page = context.new_page()
@@ -75,13 +107,12 @@ def check_navigation(browser, engine, javascript):
         with page.expect_navigation(wait_until='load') as navigation:
             page.locator('#navigation a[href="' + target + '"]').click()
         response = navigation.value
-        assert response is not None and response.status == 200, target
-        assert response.request.resource_type == 'document', target
+        assert response is not None and response.status == 200 and response.request.resource_type == 'document', target
         assert urlsplit(page.url).path.endswith('/' + target), page.url
         assert page.title() == M['expected'][target]['title']
         assert page.locator('body').get_attribute('data-page') == target
         assert page.locator('#navigation a[aria-current="page"]').count() == 1
-        R['navigation'].append({'browser': engine, 'javascript': javascript, 'target': target, 'document_response': response.status})
+        R['navigation'].append({'browser':engine,'javascript':javascript,'target':target,'document_response':response.status})
     if javascript:
         page.locator('.menu-toggle').click()
         page.screenshot(path=str(REPORT / (engine + '-390-menu-open.png')))
@@ -93,6 +124,17 @@ def check_navigation(browser, engine, javascript):
         assert not page.locator('#navigation').is_visible()
         page.go_back()
         assert not page.locator('#navigation').is_visible()
+    for target in SERVICE_PATHS + ['about.html#founders', 'contact.html']:
+        page.goto(BASE + 'index.html')
+        with page.expect_navigation(wait_until='load') as navigation:
+            page.locator('main a[href="' + target + '"]').click()
+        response = navigation.value
+        assert response is not None and response.status == 200 and response.request.resource_type == 'document', target
+        assert page.url == urljoin(BASE, target), page.url
+        if javascript and '?category=' in target:
+            category = target.split('=')[-1]
+            assert page.locator('[data-filter="'+category+'"]').get_attribute('aria-pressed') == 'true'
+        R['navigation'].append({'browser':engine,'javascript':javascript,'target':target,'document_response':response.status,'source':'home-overview'})
     context.close()
 
 def verify_browser(pw, engine):
@@ -107,13 +149,12 @@ def verify_browser(pw, engine):
     axe = ROOT / 'node_modules/axe-core/axe.min.js'
     widths = [1440, 1024, 900, 768, 430, 390, 375, 320] if engine == 'chromium' else [390, 320]
     for width in widths:
-        page.set_viewport_size({'width': width, 'height': 1000 if width > 900 else 844})
+        page.set_viewport_size({'width':width,'height':1000 if width > 900 else 844})
         for route in M['pages']:
             response = page.goto(BASE + route + '?release=' + REV, wait_until='load')
             assert response.status == 200, route
             page.evaluate('document.fonts.ready')
-            assert page.locator('h1').count() == 1, route
-            assert page.title() == M['expected'][route]['title'], route
+            assert page.locator('h1').count() == 1 and page.title() == M['expected'][route]['title'], route
             assert page.locator('meta[name="site-revision"]').get_attribute('content') == M['expected'][route].get('revision', REV), route
             assert page.locator('meta[name="robots"]').get_attribute('content') == 'noindex,nofollow', route
             assert page.locator('.footer-links a').count() == 6, route
@@ -132,27 +173,11 @@ def verify_browser(pw, engine):
             controls = page.locator('.footer-links a:visible').evaluate_all('(xs)=>xs.map(x=>({size:getComputedStyle(x).fontSize,h:x.getBoundingClientRect().height}))')
             assert all(x['size']=='16px' and x['h']>=44 for x in controls), (route, controls)
             if width <= 900:
-                assert not page.locator('#navigation').is_visible(), route
-                assert page.locator('.menu-toggle').is_visible(), route
+                assert not page.locator('#navigation').is_visible() and page.locator('.menu-toggle').is_visible(), route
                 assert page.locator('.site-header').bounding_box()['height'] <= 84, route
                 assert page.locator('.menu-toggle').bounding_box()['height'] >= 44, route
             if route == 'index.html':
-                assert page.locator('main > section').count() == 1
-                assert page.locator('.home-paths,.home-experience,.home-approach,.context-band,main .closing').count() == 0
-                assert page.locator('.home-proof').count() == 0
-                assert '39 years' not in page.locator('main').inner_text()
-                assert 'combined professional experience' not in page.locator('main').inner_text()
-                assert page.locator('.home-founder-link[href="about.html#founders"]').count() == 1
-                assert page.locator('.actions .button.primary[href="services.html"]').count() == 1
-                assert 'one-to-one coaching' in page.locator('.hero .lede').inner_text()
-                assert page.locator('.hero .eyebrow').bounding_box()['y'] >= page.locator('.site-header').bounding_box()['height']
-                if width <= 900:
-                    assert page.locator('.footer-links a:visible').count() == 1
-                    assert page.locator('.footer-links a:visible').get_attribute('href') == 'contact.html'
-                if width <= 650:
-                    assert dim['height'] <= (1150 if width <= 360 else 1000), (engine, width, dim)
-                    size = page.locator('.hero h1').evaluate('(el)=>parseFloat(getComputedStyle(el).fontSize)')
-                    assert 35 <= size <= 36, size
+                check_home(page, engine, width, dim)
             if route == 'about.html':
                 assert page.locator('.founder-portrait img').evaluate_all('(xs)=>xs.map(x=>x.getAttribute("src"))') == ['lt-founder.avif','travis-founder.avif']
                 assert page.locator('#experience .experience-item').count() == 4
@@ -161,7 +186,7 @@ def verify_browser(pw, engine):
                 assert page.locator('#why-now-heading').count() == 1
             violations = []
             ran = False
-            if axe.exists() and width in [1440, 390] and engine == 'chromium':
+            if axe.exists() and width in [1440,390] and engine == 'chromium':
                 page.add_script_tag(path=str(axe))
                 result = page.evaluate("async()=>await axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21a','wcag21aa','wcag22aa']}})")
                 violations = [{'id':v['id'],'impact':v['impact'],'nodes':[n['target'] for n in v['nodes']]} for v in result['violations']]
@@ -199,8 +224,7 @@ def verify_browser(pw, engine):
     nojs = context.new_page()
     local_fonts(nojs)
     nojs.goto(BASE+'contact.html')
-    assert nojs.locator('[data-preview-submit]').is_disabled()
-    assert nojs.locator('input[name=email]').is_disabled()
+    assert nojs.locator('[data-preview-submit]').is_disabled() and nojs.locator('input[name=email]').is_disabled()
     context.close()
     assert not errors, errors
     browser.close()
@@ -224,7 +248,7 @@ try:
         verify_browser(pw, 'chromium')
         if os.environ.get('MAKEGOOD_WEBKIT') == '1':
             verify_browser(pw, 'webkit')
-    R['checks'] = ['Short Home with clear service introduction, no standalone tenure statistic, primary service button and founder text link', 'All six mobile menu destinations load separate documents; no-JavaScript fallback remains usable', 'Menu closes on Escape, outside click and back navigation', 'Experience preserved on About; context preserved on Our approach', 'Both founder portraits unchanged and loading', 'Service filters, contact draft, FAQ anchors and legacy experience link', 'Every internal path and anchor resolves', 'No horizontal overflow at tested sizes; custom text spacing checked']
+    R['checks'] = ['Three-section Home: introduction, service summaries, brief founder context; no tenure statistic', 'All five homepage overview links and all six menu destinations load independent documents with and without JavaScript', 'Menu closes on Escape, outside click and back navigation', 'Both founder portraits unchanged, equal-sized, and loading', 'Service filters, non-sending contact draft, FAQ anchors and legacy experience link', 'Every internal path and anchor resolves', 'No horizontal overflow at tested sizes; custom text spacing checked']
     R['status'] = 'passed'
     print('PASSED', REV, flush=True)
 except Exception as exc:
