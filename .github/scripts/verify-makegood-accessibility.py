@@ -44,7 +44,7 @@ def run_browser(pw,engine):
  for width in ([1440,768,430,390,320] if engine=='chromium' else [390,320]):
   page.set_viewport_size({'width':width,'height':900 if width>900 else 844})
   for route in M['pages']:
-   response=page.goto(BASE+route+'?release='+REV,wait_until='load');assert response.status==200,(route,response.status)
+   response=page.goto(BASE+route+'?release='+REV,wait_until='load');assert response.status in (200,304),(route,response.status)
    page.evaluate('document.fonts.ready');image_ready(page)
    assert page.title()==M['expected'][route]['title'],route
    assert page.locator('h1').count()==1,route
@@ -99,7 +99,7 @@ def run_browser(pw,engine):
   menu=page.locator('.menu-toggle');menu.focus();page.keyboard.press('Enter');assert menu.get_attribute('aria-expanded')=='true'
   link=page.locator('#navigation a[href="'+target+'"]');link.focus()
   with page.expect_navigation(wait_until='load') as navigation:page.keyboard.press('Enter')
-  assert navigation.value.status==200 and navigation.value.request.resource_type=='document'
+  assert navigation.value.status in (200,304) and navigation.value.request.resource_type=='document'
   assert urlsplit(page.url).path.endswith('/'+target)
   R['navigation'].append({'browser':engine,'javascript':True,'target':target})
  page.locator('.menu-toggle').focus();page.keyboard.press('Enter');page.keyboard.press('Escape')

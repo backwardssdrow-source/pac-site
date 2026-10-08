@@ -10,8 +10,8 @@ body[data-page="index.html"] .actions{align-items:center;gap:12px 24px}
 .home-service{min-width:0;display:flex;flex-direction:column;border-top:3px solid var(--orange);padding-top:20px}
 .home-service[data-home-audience="presence"]{border-color:var(--blush)}
 .home-service[data-home-audience="individual"]{border-color:var(--gold)}
-.home-service h3{font-size:24px;line-height:1.3;margin-bottom:12px}
-.home-service p{margin-bottom:12px;font-size:18px;line-height:1.65}
+.home-service h3{font-size:1.5rem;line-height:1.3;margin-bottom:12px}
+.home-service p{margin-bottom:12px;font-size:1.125rem;line-height:1.65}
 .home-service .text-link{margin-top:auto;align-self:flex-start}
 .home-service .text-link,.home-founder-link,.home-invitation .text-link{gap:8px;min-height:44px;line-height:1.5}
 .home-people{padding-block:48px 36px}
@@ -19,19 +19,19 @@ body[data-page="index.html"] .actions{align-items:center;gap:12px 24px}
 .home-portraits{display:flex;gap:16px;align-items:flex-start}
 .home-portraits figure{margin:0;flex:0 1 104px;min-width:0}
 .home-portraits img{display:block;width:104px;max-width:100%;height:auto;aspect-ratio:1;object-fit:contain;border:1px solid var(--olive);border-radius:7px}
-.home-portraits figcaption{font-size:16px;line-height:1.5;margin-top:8px}
-.home-people h2{font-size:30px;margin-bottom:12px}
+.home-portraits figcaption{font-size:1rem;line-height:1.5;margin-top:8px}
+.home-people h2{font-size:1.875rem;margin-bottom:12px}
 .home-people-copy{min-width:0}
 .home-people-copy p{margin-bottom:12px;max-width:58ch}
-.home-founder-link{display:inline-flex;align-items:center;padding-block:8px;font-size:16px;font-weight:500;text-decoration:underline;text-underline-offset:4px}
+.home-founder-link{display:inline-flex;align-items:center;padding-block:8px;font-size:1rem;font-weight:500;text-decoration:underline;text-underline-offset:4px}
 .home-invitation{display:flex;align-items:center;justify-content:space-between;gap:12px 24px;border-top:1px solid var(--olive);margin-top:32px;padding-top:24px}
-.home-invitation h3{font-size:22px;line-height:1.4;margin:0}
+.home-invitation h3{font-size:1.375rem;line-height:1.4;margin:0}
 @media screen and (max-width:900px){
   body[data-page="index.html"] .hero{padding-block:32px 36px}
   .home-services{padding-block:32px 36px}
   .home-service-grid{grid-template-columns:1fr;gap:24px}
   .home-service{padding-top:16px}
-  .home-service h3{font-size:23px}
+  .home-service h3{font-size:1.4375rem}
   .home-service p{max-width:65ch;margin-bottom:8px}
   .home-service .text-link{margin-top:0}
   .home-people{padding-block:36px 24px}
@@ -41,11 +41,11 @@ body[data-page="index.html"] .actions{align-items:center;gap:12px 24px}
 @media screen and (max-width:650px){
   body[data-page="index.html"] .hero .eyebrow{margin-bottom:16px}
   body[data-page="index.html"] .hero .lede{line-height:1.6;margin-bottom:24px}
-  .home-services h2{font-size:28px;margin-bottom:24px}
+  .home-services h2{font-size:1.75rem;margin-bottom:24px}
   .home-people-intro{grid-template-columns:1fr;gap:20px}
   .home-portraits figure{flex-basis:96px}
   .home-portraits img{width:96px}
-  .home-people h2{font-size:28px}
+  .home-people h2{font-size:1.75rem}
   .home-people-copy p{line-height:1.65}
   .home-invitation{margin-top:24px;padding-top:20px}
 }
