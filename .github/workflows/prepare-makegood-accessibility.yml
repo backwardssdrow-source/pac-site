@@ -18,7 +18,9 @@ jobs:
           python -m playwright install --with-deps chromium webkit
           npm install --no-save axe-core
       - name: Prepare requested changes
-        run: python .github/scripts/prepare-makegood-accessibility.py
+        run: |
+          python .github/scripts/prepare-makegood-accessibility.py
+          python .github/scripts/finalize-makegood-accessibility.py
       - name: Test every page before publication
         env:
           MAKEGOOD_LOCAL: '1'
@@ -35,7 +37,8 @@ jobs:
           from pathlib import Path
           def git(*args):return subprocess.check_output(['git',*args],text=True).strip()
           paths=git('diff','--name-only').splitlines()
-          assert paths and all(p.startswith('makegood/') or p=='.github/scripts/verify-makegood.py' for p in paths),paths
+          allowed={'.github/scripts/verify-makegood.py','.github/scripts/verify-makegood-accessibility.py'}
+          assert paths and all(p.startswith('makegood/') or p in allowed for p in paths),paths
           entries=[{'path':p,'mode':'100644','type':'blob','content':Path(p).read_text()} for p in paths]
           payload=json.dumps({'base_tree':git('rev-parse','HEAD^{tree}'),'tree':entries}).encode()
           url='https://api.github.com/repos/'+os.environ['GITHUB_REPOSITORY']+'/git/trees'
