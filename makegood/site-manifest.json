@@ -1,5 +1,5 @@
 {
-  "revision": "20261007-compact-menu-3",
+  "revision": "20261007-home-editorial-4",
   "review_only": true,
   "search_indexing": false,
   "inquiry_sends": false,
@@ -30,105 +30,120 @@
       "h1": "Stronger employee communities. More human ways of working.",
       "background_hex": "#FAF1E0",
       "color": "manila",
-      "audience": "erg"
+      "audience": "erg",
+      "revision": "20261007-home-editorial-4"
     },
     "services.html": {
       "title": "Services | MakeGood Co.",
       "h1": "Start with the situation. Find the right support.",
       "background_hex": "#F9E9E1",
       "color": "sunrise",
-      "audience": "erg"
+      "audience": "erg",
+      "revision": "20261007-compact-menu-3"
     },
     "approach.html": {
       "title": "Our approach | MakeGood Co.",
       "h1": "Listen carefully. Make it practical.",
       "background_hex": "#F9EDE8",
       "color": "blush",
-      "audience": "erg"
+      "audience": "erg",
+      "revision": "20261007-compact-menu-3"
     },
     "about.html": {
       "title": "About | MakeGood Co.",
       "h1": "People. Culture. Possibilities.",
       "background_hex": "#ECEAE0",
       "color": "olive",
-      "audience": "erg"
+      "audience": "erg",
+      "revision": "20261007-compact-menu-3"
     },
     "faq.html": {
       "title": "FAQs | MakeGood Co.",
       "h1": "Before we start.",
       "background_hex": "#FAF1E0",
       "color": "manila",
-      "audience": "erg"
+      "audience": "erg",
+      "revision": "20261007-compact-menu-3"
     },
     "contact.html": {
       "title": "Contact | MakeGood Co.",
       "h1": "What would you like help with?",
       "background_hex": "#F9E9E1",
       "color": "sunrise",
-      "audience": "erg"
+      "audience": "erg",
+      "revision": "20261007-compact-menu-3"
     },
     "services/erg-portfolio-diagnostic.html": {
       "title": "ERG Portfolio Diagnostic | MakeGood Co.",
       "h1": "ERG Portfolio Diagnostic",
       "background_hex": "#F9E9E1",
       "color": "sunrise",
-      "audience": "erg"
+      "audience": "erg",
+      "revision": "20261007-compact-menu-3"
     },
     "services/erg-operating-model-build.html": {
       "title": "ERG Operating Model Build | MakeGood Co.",
       "h1": "ERG Operating Model Build",
       "background_hex": "#F9E9E1",
       "color": "sunrise",
-      "audience": "erg"
+      "audience": "erg",
+      "revision": "20261007-compact-menu-3"
     },
     "services/fractional-erg-office.html": {
       "title": "Fractional ERG Office | MakeGood Co.",
       "h1": "Fractional ERG Office",
       "background_hex": "#F9E9E1",
       "color": "sunrise",
-      "audience": "erg"
+      "audience": "erg",
+      "revision": "20261007-compact-menu-3"
     },
     "services/practice-lab.html": {
       "title": "Practice Lab | MakeGood Co.",
       "h1": "Practice Lab",
       "background_hex": "#F9E9E1",
       "color": "sunrise",
-      "audience": "erg"
+      "audience": "erg",
+      "revision": "20261007-compact-menu-3"
     },
     "services/presence-scan.html": {
       "title": "Presence Scan | MakeGood Co.",
       "h1": "Presence Scan",
       "background_hex": "#ECEAE0",
       "color": "olive",
-      "audience": "presence"
+      "audience": "presence",
+      "revision": "20261007-compact-menu-3"
     },
     "services/presence-lab.html": {
       "title": "Presence Lab | MakeGood Co.",
       "h1": "Presence Lab",
       "background_hex": "#ECEAE0",
       "color": "olive",
-      "audience": "presence"
+      "audience": "presence",
+      "revision": "20261007-compact-menu-3"
     },
     "services/senior-presence-advisory.html": {
       "title": "Leadership Advisory | MakeGood Co.",
       "h1": "Leadership Advisory",
       "background_hex": "#ECEAE0",
       "color": "olive",
-      "audience": "presence"
+      "audience": "presence",
+      "revision": "20261007-compact-menu-3"
     },
     "services/decision-session.html": {
       "title": "Decision Session | MakeGood Co.",
       "h1": "Decision Session",
       "background_hex": "#F9E9E1",
       "color": "sunrise",
-      "audience": "presence"
+      "audience": "presence",
+      "revision": "20261007-compact-menu-3"
     },
     "services/coaching.html": {
       "title": "Coaching & Thought Partnership | MakeGood Co.",
       "h1": "Coaching & Thought Partnership",
       "background_hex": "#F9EDE8",
       "color": "blush",
-      "audience": "individual"
+      "audience": "individual",
+      "revision": "20261007-compact-menu-3"
     }
   }
 }

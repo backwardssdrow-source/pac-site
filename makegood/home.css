@@ -1,0 +1,47 @@
+/* Homepage-only editorial pass. Full service details and founder experience stay on their own pages. */
+body[data-page="index.html"] > main {
+  display: flex;
+  align-items: center;
+}
+body[data-page="index.html"] .hero {
+  padding-block: 56px;
+  min-width: 0;
+}
+body[data-page="index.html"] .hero .lede {
+  max-width: 52ch;
+  margin-bottom: 28px;
+}
+body[data-page="index.html"] .actions {
+  align-items: center;
+  gap: 12px 24px;
+}
+.home-founder-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  padding-block: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.5;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+@media screen and (max-width: 900px) {
+  body[data-page="index.html"] .hero {
+    padding-block: 40px 48px;
+  }
+}
+@media screen and (max-width: 650px) {
+  body[data-page="index.html"] .hero .eyebrow {
+    margin-bottom: 20px;
+  }
+  body[data-page="index.html"] .hero .lede {
+    line-height: 1.6;
+  }
+  body[data-page="index.html"] .actions {
+    gap: 8px;
+  }
+  .home-founder-link {
+    justify-self: start;
+  }
+}

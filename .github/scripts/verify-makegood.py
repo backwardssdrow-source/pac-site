@@ -50,7 +50,7 @@ def wait_for_release():
                 return path
             time.sleep(8)
         raise AssertionError('Live bytes differ: ' + path)
-    paths = M['pages'] + ['site.css', 'site-base.css', 'site.js', 'makegood-sunrise.svg', 'lt-founder.avif', 'travis-founder.avif']
+    paths = M['pages'] + ['site.css', 'site-base.css', 'home.css', 'site.js', 'makegood-sunrise.svg', 'lt-founder.avif', 'travis-founder.avif']
     with ThreadPoolExecutor(max_workers=6) as pool:
         R['source_files_matched'] = list(pool.map(match, paths))
 
@@ -89,7 +89,7 @@ def check_navigation(browser, engine, javascript):
         assert not page.locator('#navigation').is_visible()
         assert page.locator('.menu-toggle').get_attribute('aria-expanded') == 'false'
         page.locator('.menu-toggle').click()
-        page.locator('.home-proof').click()
+        page.locator('.home-footer .footer-bottom').click()
         assert not page.locator('#navigation').is_visible()
         page.go_back()
         assert not page.locator('#navigation').is_visible()
@@ -114,7 +114,7 @@ def verify_browser(pw, engine):
             page.evaluate('document.fonts.ready')
             assert page.locator('h1').count() == 1, route
             assert page.title() == M['expected'][route]['title'], route
-            assert page.locator('meta[name="site-revision"]').get_attribute('content') == REV, route
+            assert page.locator('meta[name="site-revision"]').get_attribute('content') == M['expected'][route].get('revision', REV), route
             assert page.locator('meta[name="robots"]').get_attribute('content') == 'noindex,nofollow', route
             assert page.locator('.footer-links a').count() == 6, route
             for image in page.locator('img').all():
@@ -139,8 +139,12 @@ def verify_browser(pw, engine):
             if route == 'index.html':
                 assert page.locator('main > section').count() == 1
                 assert page.locator('.home-paths,.home-experience,.home-approach,.context-band,main .closing').count() == 0
-                assert '39 years of combined professional experience' in page.locator('.home-proof').inner_text()
-                assert page.locator('.home-proof a').count() == 0
+                assert page.locator('.home-proof').count() == 0
+                assert '39 years' not in page.locator('main').inner_text()
+                assert 'combined professional experience' not in page.locator('main').inner_text()
+                assert page.locator('.home-founder-link[href="about.html#founders"]').count() == 1
+                assert page.locator('.actions .button.primary[href="services.html"]').count() == 1
+                assert 'one-to-one coaching' in page.locator('.hero .lede').inner_text()
                 assert page.locator('.hero .eyebrow').bounding_box()['y'] >= page.locator('.site-header').bounding_box()['height']
                 if width <= 900:
                     assert page.locator('.footer-links a:visible').count() == 1
@@ -152,6 +156,7 @@ def verify_browser(pw, engine):
             if route == 'about.html':
                 assert page.locator('.founder-portrait img').evaluate_all('(xs)=>xs.map(x=>x.getAttribute("src"))') == ['lt-founder.avif','travis-founder.avif']
                 assert page.locator('#experience .experience-item').count() == 4
+                assert '39 years of combined professional experience' in page.locator('#founders').inner_text()
             if route == 'approach.html':
                 assert page.locator('#why-now-heading').count() == 1
             violations = []
@@ -219,7 +224,7 @@ try:
         verify_browser(pw, 'chromium')
         if os.environ.get('MAKEGOOD_WEBKIT') == '1':
             verify_browser(pw, 'webkit')
-    R['checks'] = ['Short Home with compact header, primary service button and simple mobile footer', 'All six mobile menu destinations load separate documents; no-JavaScript fallback remains usable', 'Menu closes on Escape, outside click and back navigation', 'Experience preserved on About; context preserved on Our approach', 'Both founder portraits unchanged and loading', 'Service filters, contact draft, FAQ anchors and legacy experience link', 'Every internal path and anchor resolves', 'No horizontal overflow at tested sizes; custom text spacing checked']
+    R['checks'] = ['Short Home with clear service introduction, no standalone tenure statistic, primary service button and founder text link', 'All six mobile menu destinations load separate documents; no-JavaScript fallback remains usable', 'Menu closes on Escape, outside click and back navigation', 'Experience preserved on About; context preserved on Our approach', 'Both founder portraits unchanged and loading', 'Service filters, contact draft, FAQ anchors and legacy experience link', 'Every internal path and anchor resolves', 'No horizontal overflow at tested sizes; custom text spacing checked']
     R['status'] = 'passed'
     print('PASSED', REV, flush=True)
 except Exception as exc:
