@@ -1,0 +1,49 @@
+name: Prepare MakeGood community refinements
+on:
+  push:
+    branches: [makegood-community-pathways-20261009]
+    paths: ['.github/scripts/refine-makegood-community.py', '.github/scripts/verify-makegood-community.py', '.github/workflows/prepare-makegood-community.yml', 'makegood/service-navigation.js']
+permissions:
+  contents: write
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Install browser checks
+        run: |
+          python -m pip install playwright beautifulsoup4
+          python -m playwright install --with-deps chromium webkit
+          npm install --no-save axe-core
+      - name: Prepare approved editorial changes
+        run: python .github/scripts/refine-makegood-community.py
+      - name: Check existing navigation and accessibility
+        env:
+          MAKEGOOD_LOCAL: '1'
+          MAKEGOOD_WEBKIT: '1'
+        run: python .github/scripts/verify-makegood.py
+      - name: Check new service paths and community copy
+        env:
+          MAKEGOOD_LOCAL: '1'
+          MAKEGOOD_WEBKIT: '1'
+        run: python .github/scripts/verify-makegood-community.py
+      - name: Commit tested changes to review branch only
+        run: |
+          git diff --stat
+          git add makegood .github/workflows/verify-service-guide-spacing.yml
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'Refine MakeGood community-first services, expertise and accessible navigation'
+          git push origin HEAD:refs/heads/makegood-community-pathways-20261009
+          git rev-parse HEAD > community-verification/prepared-commit.txt
+          git rev-parse HEAD^{tree} > community-verification/prepared-tree.txt
+      - name: Save previews and reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: makegood-community-review
+          path: |
+            community-verification/
+            makegood-verification/
+          retention-days: 7
