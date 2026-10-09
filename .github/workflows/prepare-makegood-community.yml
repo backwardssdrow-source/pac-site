@@ -14,8 +14,6 @@ jobs:
     timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
       - name: Install matching test packages
         timeout-minutes: 3
         run: |
@@ -41,14 +39,31 @@ jobs:
           MAKEGOOD_LOCAL: '1'
           MAKEGOOD_WEBKIT: '1'
         run: python .github/scripts/verify-makegood-community.py
-      - name: Commit tested changes to review branch only
+      - name: Store tested tree without publishing
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          git diff --stat
-          git add makegood .github/workflows/verify-service-guide-spacing.yml
-          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'Refine MakeGood community-first services, expertise and accessible navigation'
-          git push origin HEAD:refs/heads/makegood-community-pathways-20261009
-          git rev-parse HEAD > community-verification/prepared-commit.txt
-          git rev-parse HEAD^{tree} > community-verification/prepared-tree.txt
+          python - <<'PY'
+          import json,os,urllib.request
+          from pathlib import Path
+          root=Path(os.environ['GITHUB_WORKSPACE'])
+          api='https://api.github.com/repos/'+os.environ['GITHUB_REPOSITORY']
+          headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'}
+          def request(path,data=None):
+              payload=None if data is None else json.dumps(data).encode()
+              req=urllib.request.Request(api+path,data=payload,headers=headers)
+              with urllib.request.urlopen(req,timeout=30) as response:return json.load(response)
+          parent=os.environ['GITHUB_SHA']
+          base=request('/git/commits/'+parent)['tree']['sha']
+          names=['makegood/index.html','makegood/services.html','makegood/about.html','makegood/approach.html','makegood/site-manifest.json','makegood/services/erg-portfolio-diagnostic.html','makegood/services/erg-operating-model-build.html','makegood/services/fractional-erg-office.html','makegood/services/practice-lab.html','makegood/services/presence-lab.html','.github/workflows/verify-service-guide-spacing.yml']
+          entries=[{'path':name,'mode':'100644','type':'blob','content':(root/name).read_text()} for name in names]
+          tree=request('/git/trees',{'base_tree':base,'tree':entries})['sha']
+          out=root/'community-verification'
+          (out/'prepared-tree.txt').write_text(tree)
+          (out/'prepared-parent.txt').write_text(parent)
+          (out/'prepared-files.json').write_text(json.dumps(names,indent=2))
+          print('Tested tree stored without moving any branch:',tree)
+          PY
       - name: Save previews and reports
         if: always()
         uses: actions/upload-artifact@v4
