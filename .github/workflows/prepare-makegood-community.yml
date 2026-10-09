@@ -8,16 +8,27 @@ permissions:
 jobs:
   prepare:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    container:
+      image: mcr.microsoft.com/playwright/python:v1.63.0-noble
+      options: --ipc=host
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 2
-      - name: Install browser checks
+      - name: Install matching test packages
+        timeout-minutes: 3
         run: |
-          python -m pip install playwright beautifulsoup4
-          python -m playwright install --with-deps chromium webkit
-          npm install --no-save axe-core
+          python -m pip install playwright==1.63.0 beautifulsoup4
+          python - <<'PY'
+          import json,urllib.request,tarfile,io
+          from pathlib import Path
+          with urllib.request.urlopen('https://registry.npmjs.org/axe-core/latest',timeout=25) as r:meta=json.load(r)
+          with urllib.request.urlopen(meta['dist']['tarball'],timeout=30) as r:raw=r.read()
+          with tarfile.open(fileobj=io.BytesIO(raw),mode='r:gz') as archive:
+              p=Path('node_modules/axe-core/axe.min.js');p.parent.mkdir(parents=True,exist_ok=True)
+              p.write_bytes(archive.extractfile('package/axe.min.js').read())
+          PY
       - name: Prepare approved editorial changes
         run: python .github/scripts/refine-makegood-community.py
       - name: Check existing navigation and accessibility
