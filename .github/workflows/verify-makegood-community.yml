@@ -1,0 +1,41 @@
+name: Verify live MakeGood community paths
+on:
+  push:
+    branches: [gh-pages]
+    paths: ['makegood/**', '.github/scripts/verify-makegood-community.py', '.github/workflows/verify-makegood-community.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify-community:
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright/python:v1.63.0-noble
+      options: --ipc=host
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install matching test packages
+        timeout-minutes: 3
+        run: |
+          python -m pip install playwright==1.63.0
+          python - <<'PY'
+          import json,urllib.request,tarfile,io
+          from pathlib import Path
+          with urllib.request.urlopen('https://registry.npmjs.org/axe-core/latest',timeout=25) as r:meta=json.load(r)
+          with urllib.request.urlopen(meta['dist']['tarball'],timeout=30) as r:raw=r.read()
+          with tarfile.open(fileobj=io.BytesIO(raw),mode='r:gz') as archive:
+              p=Path('node_modules/axe-core/axe.min.js');p.parent.mkdir(parents=True,exist_ok=True)
+              p.write_bytes(archive.extractfile('package/axe.min.js').read())
+          PY
+      - name: Check published copy and service paths
+        env:
+          MAKEGOOD_WEBKIT: '1'
+        run: python .github/scripts/verify-makegood-community.py
+      - name: Save live screenshots and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: makegood-community-live
+          path: community-verification/
+          retention-days: 7

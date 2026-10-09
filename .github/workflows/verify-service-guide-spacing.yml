@@ -31,7 +31,7 @@ jobs:
           output.mkdir(exist_ok=True)
           report = {'revision': rev, 'sizes': [], 'navigation': [], 'errors': []}
           expected = Path('makegood/services.html').read_bytes()
-          targets = ['services/erg-portfolio-diagnostic.html', 'services/erg-operating-model-build.html', 'services/fractional-erg-office.html', 'services/coaching.html']
+          targets = ['services/erg-portfolio-diagnostic.html', 'services/erg-operating-model-build.html', 'services.html', 'services/coaching.html']
           try:
               deadline = time.monotonic() + 300
               while True:
@@ -81,6 +81,9 @@ jobs:
                           assert navigation.value.status == 200
                           assert navigation.value.request.resource_type == 'document'
                           assert urlsplit(page.url).path.endswith('/' + target)
+                          if i == 2:
+                              assert page.locator('[data-filter=presence]').get_attribute('aria-pressed') == 'true'
+                              assert page.locator('.offer:visible').count() == 4
                           report['navigation'].append({'browser': engine, 'target': target, 'status': 200})
                       page.goto(base + 'services.html?spacing=' + rev)
                       for category, count in [('erg', 5), ('presence', 4), ('individual', 1), ('all', 9)]:
