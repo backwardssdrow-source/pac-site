@@ -2,7 +2,7 @@
   "revision": "20261008-accessibility-1",
   "review_only": true,
   "search_indexing": false,
-  "inquiry_sends": false,
+  "inquiry_sends": true,
   "booking_connected": false,
   "payment_connected": false,
   "service_count": 9,
@@ -146,5 +146,6 @@
       "revision": "20261008-accessibility-1"
     }
   },
-  "editorial_revision": "20261009-community-pathways-1"
+  "editorial_revision": "20261009-community-pathways-1",
+  "contact_revision": "20261012-contact-1"
 }

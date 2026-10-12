@@ -3,7 +3,7 @@ from pathlib import Path
 from urllib.parse import urljoin,urlsplit
 from concurrent.futures import ThreadPoolExecutor
 from http.server import ThreadingHTTPServer,SimpleHTTPRequestHandler
-import os,json,time,threading,functools,urllib.request
+import os,json,re,time,threading,functools,urllib.request
 from playwright.sync_api import sync_playwright
 ROOT=Path(os.environ.get('MAKEGOOD_ROOT','.')).resolve();S=ROOT/'makegood'
 M=json.loads((S/'site-manifest.json').read_text());REV=M['revision']
@@ -39,6 +39,35 @@ def dimensions(page,engine,route,width,test):
 def run_browser(pw,engine):
  browser=getattr(pw,engine).launch(headless=True)
  page=browser.new_page();page.set_default_timeout(15000);errors=[]
+ # CI never sends real inquiries. Intercept every non-read request before browsing.
+ # These checks validate the UI contract; a separate owner-run test checks delivery.
+ contact_requests=[];contact_outcomes=[]
+ def isolate_contact_transport(route):
+  request=route.request
+  if request.method in ['GET','HEAD']:
+   route.continue_();return
+  target=urlsplit(request.url)
+  if request.method!='POST' or target.scheme!='https' or target.netloc!='script.google.com' or not re.fullmatch(r'/macros/s/[A-Za-z0-9_-]+/exec',target.path):
+   route.abort('blockedbyclient')
+   raise AssertionError('Unexpected non-read request was blocked in CI')
+  if not contact_outcomes:
+   route.abort('blockedbyclient')
+   raise AssertionError('Unexpected contact submission was blocked in CI')
+  try:
+   data=json.loads(request.post_data or '{}')
+   assert set(data)=={'request_id','name','email','organization','service','message','website'},data
+   assert re.fullmatch(r'[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}',data['request_id'],re.I)
+   assert request.headers.get('content-type','').lower().startswith('text/plain')
+   assert data['website']=='' and data['service']=='coaching'
+  except Exception:
+   route.abort('blockedbyclient');raise
+  contact_requests.append(request.post_data)
+  outcome=contact_outcomes.pop(0)
+  if outcome=='unconfirmed':response={'ok':True,'inquiry_id':'mismatched-test-id'}
+  elif outcome=='notification-failed':response={'ok':False,'code':'NOTIFICATION_FAILED','stored':True,'inquiry_id':data['request_id']}
+  else:response={'ok':True,'inquiry_id':data['request_id'],'duplicate':True}
+  route.fulfill(status=200,content_type='application/json',headers={'Access-Control-Allow-Origin':'*'},body=json.dumps(response))
+ page.context.route('**/*',isolate_contact_transport)
  page.on('pageerror',lambda err:errors.append(str(err)))
  axe=ROOT/'node_modules/axe-core/axe.min.js'
  for width in ([1440,768,430,390,320] if engine=='chromium' else [390,320]):
@@ -113,21 +142,37 @@ def run_browser(pw,engine):
   assert page.locator('[data-filter='+category+']').get_attribute('aria-pressed')=='true'
  page.goto(BASE+'faq.html#terms');assert page.locator('#terms').get_attribute('open') is not None
  page.goto(BASE+'services/coaching.html');page.locator('.detail-summary .button').click();assert page.locator('#service-select').input_value()=='coaching'
- sent=[];page.on('request',lambda r:sent.append(r.url) if r.method not in ['GET','HEAD'] else None)
- page.locator('input[name=name]').fill('Accessibility check');page.locator('input[name=email]').fill('test@example.com');page.locator('textarea').fill('Non-sending form check.')
- page.locator('[data-preview-submit]').click();assert 'NOT SENT' in page.locator('#inquiry-text').inner_text();assert not sent
+ assert M['inquiry_sends'] is True
+ assert 'private Google Workspace tracker' in page.locator('#inquiry-privacy').inner_text()
+ assert page.locator('input[name=website]').is_hidden()
+ page.locator('input[name=name]').fill('CI TEST - intercepted, never sent');page.locator('input[name=email]').fill('test@example.com');page.locator('textarea').fill('CI MOCK ONLY - no live inquiry or notification.')
+ contact_outcomes.extend(['unconfirmed','notification-failed','success'])
+ submit=page.locator('[data-inquiry-submit]')
+ submit.click()
+ page.wait_for_function("document.getElementById('inquiry-status').textContent.includes('could not confirm')")
+ assert page.locator('#inquiry-result').is_hidden()
+ submit.click()
+ page.wait_for_function("document.getElementById('inquiry-status').textContent.includes('was saved')")
+ assert 'could not complete the notification' in page.locator('#inquiry-status').inner_text()
+ assert page.locator('#inquiry-result').is_hidden()
+ submit.click();page.locator('#inquiry-result').wait_for(state='visible')
+ assert 'Your inquiry has been received.' in page.locator('#inquiry-result').inner_text()
+ assert len(contact_requests)==3 and len(set(contact_requests))==1
+ assert json.loads(contact_requests[0])['request_id'] in page.locator('#inquiry-reference').inner_text()
+ assert not contact_outcomes
+ page.locator('#edit-inquiry').click();assert page.locator('input[name=name]').input_value()==''
  page.emulate_media(reduced_motion='reduce');page.goto(BASE+'services.html')
  assert page.locator('html').evaluate('(e)=>getComputedStyle(e).scrollBehavior')=='auto'
  page.set_viewport_size({'width':844,'height':390});page.locator('.menu-toggle').click()
  assert page.locator('header').evaluate('(e)=>getComputedStyle(e).position')=='relative'
  assert page.locator('#navigation a').evaluate_all('(xs)=>xs.every(x=>x.getBoundingClientRect().height>=44)')
- context=browser.new_context(java_script_enabled=False,viewport={'width':390,'height':844});q=context.new_page();q.goto(BASE+'index.html')
+ context=browser.new_context(java_script_enabled=False,viewport={'width':390,'height':844});q=context.new_page();context.route('**/*',isolate_contact_transport);q.goto(BASE+'index.html')
  for target in PAGES[1:]+PAGES[:1]:
   assert q.locator('#navigation').is_visible()
   with q.expect_navigation():q.locator('#navigation a[href="'+target+'"]').click()
   assert urlsplit(q.url).path.endswith('/'+target);R['navigation'].append({'browser':engine,'javascript':False,'target':target})
  q.goto(BASE+'services.html');q.locator('.optional-context>summary').first.click();assert q.locator('.optional-context').first.get_attribute('open') is not None
- q.goto(BASE+'contact.html');assert q.locator('[data-preview-submit]').is_disabled()
+ q.goto(BASE+'contact.html');assert q.locator('[data-inquiry-submit]').is_disabled()
  context.close();assert not errors,errors;browser.close()
 try:
  if not LOCAL:
@@ -135,8 +180,9 @@ try:
  with sync_playwright() as pw:
   run_browser(pw,'chromium')
   if os.environ.get('MAKEGOOD_WEBKIT')=='1':run_browser(pw,'webkit')
- R['status']='passed';R['checks']=['All 15 separate pages','320 CSS-pixel reflow (400%-zoom equivalent at 1280px)','Text doubles with a 200% root-font preference','Expanded content tolerates custom text spacing','44px standalone controls','Keyboard menu, Escape, skip link and native disclosures','Category filters and service-to-coaching inquiry path','Both founder cards in the correct grid','Reduced-motion and no-JavaScript navigation','Contact remains a non-sending preview'];print('PASSED',REV,flush=True)
+ R['status']='passed';R['checks']=['All 15 separate pages','320 CSS-pixel reflow (400%-zoom equivalent at 1280px)','Text doubles with a 200% root-font preference','Expanded content tolerates custom text spacing','44px standalone controls','Keyboard menu, Escape, skip link and native disclosures','Category filters and service-to-coaching inquiry path','Both founder cards in the correct grid','Reduced-motion and no-JavaScript navigation','Contact acceptance, uncertain response, notification failure and same-ID retry (intercepted; no live email)' ];print('PASSED',REV,flush=True)
 except Exception as e:R['status']='failed';R['error']=repr(e);raise
 finally:
  (OUT/'report.json').write_text(json.dumps(R,indent=2))
  if server:server.shutdown()
+
