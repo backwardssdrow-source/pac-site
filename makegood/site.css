@@ -30,7 +30,7 @@ body[data-page="index.html"]>main{flex:1}
   .home-footer{padding-block:12px;background:var(--manila-wash)}
   .home-footer>.wrap{display:flex;align-items:center;justify-content:space-between;gap:12px}
   .home-footer .footer-main{order:2}
-  .home-footer .footer-links{display:block;width:auto}
+  .home-footer .footer-links{display:flex;width:auto}
   .home-footer .footer-links a:not([href="contact.html"]):not([href="privacy.html"]){display:none}
   .home-footer .footer-links a{font-size:1rem;line-height:1.5;padding:8px 0;min-height:44px}
   .home-footer .footer-bottom{order:1;flex-direction:row;align-items:center;margin:0;padding:0;border:0}
