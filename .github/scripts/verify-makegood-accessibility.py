@@ -141,7 +141,10 @@ def run_browser(pw,engine):
   page.locator('[data-filter='+category+']').click();assert page.locator('.offer:visible').count()==count
   assert page.locator('[data-filter='+category+']').get_attribute('aria-pressed')=='true'
  page.goto(BASE+'faq.html#terms');assert page.locator('#terms').get_attribute('open') is not None
- page.goto(BASE+'services/coaching.html');page.locator('.detail-summary .button').click();assert page.locator('#service-select').input_value()=='coaching'
+ page.goto(BASE+'services/coaching.html');page.locator('.detail-summary .button').click()
+ # Wait for the deferred form script after the service-link navigation.
+ page.wait_for_function("document.getElementById('service-select')?.value === 'coaching' && document.querySelector('[data-inquiry-submit]')?.disabled === false")
+ assert page.locator('#service-select').input_value()=='coaching'
  assert M['inquiry_sends'] is True
  assert 'private Google Workspace tracker' in page.locator('#inquiry-privacy').inner_text()
  assert page.locator('input[name=website]').is_hidden()
