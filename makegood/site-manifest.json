@@ -22,11 +22,12 @@
     "services/presence-lab.html",
     "services/senior-presence-advisory.html",
     "services/decision-session.html",
-    "services/coaching.html"
+    "services/coaching.html",
+    "privacy.html"
   ],
   "expected": {
     "index.html": {
-      "title": "Home | MakeGood Co.",
+      "title": "MakeGood Co. | People. Culture. Possibilities.",
       "h1": "Stronger employee communities. More human ways of working.",
       "background_hex": "#FAF1E0",
       "color": "manila",
@@ -144,8 +145,18 @@
       "color": "blush",
       "audience": "individual",
       "revision": "20261008-accessibility-1"
+    },
+    "privacy.html": {
+      "title": "Privacy | MakeGood Co.",
+      "h1": "Privacy",
+      "background_hex": "#FAF1E0",
+      "color": "manila",
+      "audience": "erg",
+      "revision": "20261008-accessibility-1"
     }
   },
   "editorial_revision": "20261009-community-pathways-1",
-  "contact_revision": "20261012-contact-1"
+  "contact_revision": "20261012-contact-1",
+  "launch_cleanup_revision": "20261012-launch-cleanup-1"
 }
+

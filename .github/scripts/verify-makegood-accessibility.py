@@ -76,6 +76,12 @@ def run_browser(pw,engine):
    response=page.goto(BASE+route+'?release='+REV,wait_until='load');assert response.status in (200,304),(route,response.status)
    page.evaluate('document.fonts.ready');image_ready(page)
    assert page.title()==M['expected'][route]['title'],route
+   description=page.locator('meta[name=description]').get_attribute('content')
+   canonical=page.locator('link[rel=canonical]').get_attribute('href')
+   for selector,value in [('meta[property="og:title"]',page.title()),('meta[property="og:description"]',description),('meta[property="og:url"]',canonical),('meta[name="twitter:title"]',page.title()),('meta[name="twitter:description"]',description),('meta[name="twitter:url"]',canonical),('meta[name="twitter:card"]','summary')]:
+    assert page.locator(selector).count()==1 and page.locator(selector).get_attribute('content')==value,(route,selector)
+   assert page.locator('footer a[href$="privacy.html"]').count()==1,route
+   assert page.locator('footer a[href$="privacy.html"]').is_visible(),(route,width,'privacy link visibility')
    assert page.locator('h1').count()==1,route
    assert page.locator('meta[name=viewport]').count()==1,route
    assert page.locator('meta[name=robots]').get_attribute('content')=='noindex,nofollow',route
@@ -147,6 +153,9 @@ def run_browser(pw,engine):
  assert page.locator('#service-select').input_value()=='coaching'
  assert M['inquiry_sends'] is True
  assert 'private Google Workspace tracker' in page.locator('#inquiry-privacy').inner_text()
+ assert page.locator('#inquiry-privacy a').get_attribute('href')=='privacy.html'
+ assert page.locator('#contact-fallback a').get_attribute('href').lower()=='mailto:info@makegoodco.com'
+ assert page.locator('#contact-fallback').is_visible()
  assert page.locator('input[name=website]').is_hidden()
  page.locator('input[name=name]').fill('CI TEST - intercepted, never sent');page.locator('input[name=email]').fill('test@example.com');page.locator('textarea').fill('CI MOCK ONLY - no live inquiry or notification.')
  contact_outcomes.extend(['unconfirmed','notification-failed','success'])
@@ -176,16 +185,21 @@ def run_browser(pw,engine):
   assert urlsplit(q.url).path.endswith('/'+target);R['navigation'].append({'browser':engine,'javascript':False,'target':target})
  q.goto(BASE+'services.html');q.locator('.optional-context>summary').first.click();assert q.locator('.optional-context').first.get_attribute('open') is not None
  q.goto(BASE+'contact.html');assert q.locator('[data-inquiry-submit]').is_disabled()
+ assert q.locator('#contact-fallback a').is_visible()
+ assert q.locator('#contact-fallback a').get_attribute('href').lower()=='mailto:info@makegoodco.com'
+ with q.expect_navigation():q.locator('footer a[href$="privacy.html"]').click()
+ assert urlsplit(q.url).path.endswith('/privacy.html') and q.locator('h1').inner_text()=='Privacy'
  context.close();assert not errors,errors;browser.close()
 try:
  if not LOCAL:
-  with ThreadPoolExecutor(max_workers=6) as pool:R['source_files_matched']=list(pool.map(match,M['pages']+['site.css','site-base.css','home.css','site.js','lt-founder.avif','travis-founder.avif']))
+  with ThreadPoolExecutor(max_workers=6) as pool:R['source_files_matched']=list(pool.map(match,M['pages']+['site-manifest.json','site.css','site-base.css','home.css','site.js','lt-founder.avif','travis-founder.avif']))
  with sync_playwright() as pw:
   run_browser(pw,'chromium')
   if os.environ.get('MAKEGOOD_WEBKIT')=='1':run_browser(pw,'webkit')
- R['status']='passed';R['checks']=['All 15 separate pages','320 CSS-pixel reflow (400%-zoom equivalent at 1280px)','Text doubles with a 200% root-font preference','Expanded content tolerates custom text spacing','44px standalone controls','Keyboard menu, Escape, skip link and native disclosures','Category filters and service-to-coaching inquiry path','Both founder cards in the correct grid','Reduced-motion and no-JavaScript navigation','Contact acceptance, uncertain response, notification failure and same-ID retry (intercepted; no live email)' ];print('PASSED',REV,flush=True)
+ R['status']='passed';R['checks']=[f'All {len(M["pages"])} separate pages','320 CSS-pixel reflow (400%-zoom equivalent at 1280px)','Text doubles with a 200% root-font preference','Expanded content tolerates custom text spacing','44px standalone controls','Keyboard menu, Escape, skip link and native disclosures','Category filters and service-to-coaching inquiry path','Both founder cards in the correct grid','Reduced-motion and no-JavaScript navigation, privacy link and email fallback','Contact acceptance, uncertain response, notification failure and same-ID retry (intercepted; no live email)' ];print('PASSED',REV,flush=True)
 except Exception as e:R['status']='failed';R['error']=repr(e);raise
 finally:
  (OUT/'report.json').write_text(json.dumps(R,indent=2))
  if server:server.shutdown()
+
 

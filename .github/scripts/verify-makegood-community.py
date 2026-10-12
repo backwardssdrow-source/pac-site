@@ -103,7 +103,7 @@ try:
  assert M.get('editorial_revision')==REV
  for p in SITE.rglob('*'):
   if p.suffix in ['.html','.js']:
-   assert not re.search(r'[\w.+-]+@makegoodco\.com',p.read_text(),re.I),'Private recipient in public source'
+   assert not re.search(r'\b(?:lt|travis)@makegoodco\.com\b',p.read_text(),re.I),'Private recipient in public source: '+str(p)
  if not LOCAL:
   paths=['index.html','services.html','about.html','approach.html','service-navigation.js','site-manifest.json']
   for p in paths:
@@ -119,9 +119,10 @@ try:
   run(pw,'chromium')
   if os.environ.get('MAKEGOOD_WEBKIT')=='1':run(pw,'webkit')
  R['status']='passed'
- R['checks']=['All 15 pages render','Four problem-first pathways include leadership','Home links land on filtered results with focus','Filter reloads preserve category and anchor','Native deep links work without JavaScript','About expertise precedes unchanged bios','Illustrative example opens by keyboard','No portrait on Home','No public intake recipient addresses']
+ R['checks']=[f'All {len(M["pages"])} pages render','Four problem-first pathways include leadership','Home links land on filtered results with focus','Filter reloads preserve category and anchor','Native deep links work without JavaScript','About expertise precedes unchanged bios','Illustrative example opens by keyboard','No portrait on Home','Private founder recipients are not published']
  print('PASSED',REV,flush=True)
 except Exception as e:R['status']='failed';R['error']=repr(e);raise
 finally:
  (OUT/'report.json').write_text(json.dumps(R,indent=2))
  if server:server.shutdown()
+

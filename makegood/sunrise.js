@@ -1,5 +1,5 @@
 'use strict';
-const pageTitle='MakeGood Co. | Services and Founding Pricing';
+const pageTitle='MakeGood Co. | People. Culture. Possibilities.';
 document.title=pageTitle;
 const canonical=document.querySelector('link[rel="canonical"]')||document.head.appendChild(document.createElement('link'));
 canonical.rel='canonical';canonical.href='https://backwardssdrow-source.github.io/pac-site/makegood/';
@@ -52,3 +52,4 @@ document.getElementById('save-inquiry').addEventListener('click',()=>{const blob
 
 // Keep repeated service selections and keyboard navigation predictable.
 document.querySelectorAll('a[href^="#service-"]').forEach(link=>link.addEventListener('click',event=>{if(location.hash===link.getAttribute('href')){event.preventDefault();openService(location.hash.slice(9));}}));
+
